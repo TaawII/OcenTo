@@ -1,10 +1,39 @@
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
 
-class User(models.Model):
-    id = models.AutoField(primary_key=True)
+class UserManager(BaseUserManager):
+    def create_user(self, username, password=None, **extra_fields):
+        if not username:
+            raise ValueError('Nazwa użytkownika musi być ustawiona')
+        user = self.model(username=username, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+class User(AbstractBaseUser):
+    ROLE_CHOICES = [
+        ('user', 'User'),
+        ('creator', 'Creator'),
+    ]
+
     username = models.CharField(max_length=255, unique=True)
     password = models.CharField(max_length=255)
-    role = models.CharField(max_length=255)
+    role = models.CharField(max_length=255, choices=ROLE_CHOICES, default='user')
+
+    # Wymagane pola, aby Django działało poprawnie z niestandardowym modelem użytkownika
+    is_active = models.BooleanField(default=True)  # Wymagane przez AbstractBaseUser
+    is_staff = models.BooleanField(default=False)  # Wymagane przez AbstractBaseUser
+
+    def save(self, *args, **kwargs):
+        if not self.password.startswith('pbkdf2_sha256$'):
+            self.password = make_password(self.password)
+        super().save(*args, **kwargs)
+
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['role']
+
+    objects = UserManager()
 
     def __str__(self):
         return self.username
