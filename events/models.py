@@ -3,18 +3,25 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
 
 class UserManager(BaseUserManager):
-    def create_user(self, username, password=None, **extra_fields):
+    def create_user(self, username, password=None, role='user'):
         if not username:
             raise ValueError('Nazwa użytkownika musi być ustawiona')
-        user = self.model(username=username, **extra_fields)
+        user = self.model(username=username, role='user')
         user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, username, password):
+        user = self.create_user(username=username, password=password, role='admin')
+        user.is_staff = True
+        user.is_superuser = True
         user.save(using=self._db)
         return user
 
 class User(AbstractBaseUser):
     ROLE_CHOICES = [
         ('user', 'User'),
-        ('creator', 'Creator'),
+        ('admin', 'Admin'),
     ]
 
     username = models.CharField(max_length=255, unique=True)
@@ -24,19 +31,20 @@ class User(AbstractBaseUser):
     # Wymagane pola, aby Django działało poprawnie z niestandardowym modelem użytkownika
     is_active = models.BooleanField(default=True)  # Wymagane przez AbstractBaseUser
     is_staff = models.BooleanField(default=False)  # Wymagane przez AbstractBaseUser
+    is_superuser = models.BooleanField(default=False)
+
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = []
+
+    objects = UserManager()
 
     def save(self, *args, **kwargs):
         if not self.password.startswith('pbkdf2_sha256$'):
             self.password = make_password(self.password)
         super().save(*args, **kwargs)
 
-    USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['role']
-
-    objects = UserManager()
-
     def __str__(self):
-        return self.username
+        return f"{self.username} ({self.role})"
 
 
 class Event(models.Model):
