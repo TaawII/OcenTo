@@ -4,7 +4,9 @@ from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import User
+from django.db.models import Count
+from .models import User, Event
+from .serializers import EventSerializerForMobile
 import logging
 
 logger = logging.getLogger(__name__)
@@ -25,7 +27,6 @@ class RegisterView(APIView):
         )
 
         return Response({"message": "Użytkownik został zarejestrowany pomyślnie"}, status=status.HTTP_201_CREATED)
-
 
 class LoginView(APIView):
     permission_classes = [AllowAny]
@@ -53,5 +54,13 @@ class LoginView(APIView):
         logger.info(f"Użytkownik zalogowany pomyślnie: {username}")
         return Response({
             'refresh': refresh_token,
-            'access': access_token,
+            'token': access_token,
         }, status=status.HTTP_200_OK)
+
+class EventListMobileView(APIView):
+    def get(self, request):
+        events = Event.objects.annotate(
+            member_count=Count('members')  # Liczba członków powiązanych z wydarzeniem
+        )
+        serializer = EventSerializerForMobile(events, many=True)
+        return Response(serializer.data)

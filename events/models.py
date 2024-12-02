@@ -46,6 +46,13 @@ class User(AbstractBaseUser):
     def __str__(self):
         return f"{self.username} ({self.role})"
 
+    # def has_perm(self, perm, obj=None):
+    #     # Prosta implementacja: wszyscy użytkownicy mają wszystkie uprawnienia
+    #     return True
+
+    # def has_module_perms(self, app_label):
+    #     # Prosta implementacja: wszyscy użytkownicy mają dostęp do każdego modułu
+    #     return True
 
 class Event(models.Model):
     id = models.AutoField(primary_key=True)

@@ -34,6 +34,16 @@ class LoginSerializer(serializers.Serializer):
 
         logger.info("Logowanie udane.")
         return user
+    
+class EventSerializerForMobile(serializers.ModelSerializer):
+    owner = serializers.StringRelatedField()  # Nazwa wlasciciela zamiast ID
+    member_count = serializers.IntegerField(read_only=True)  # Liczba członków
+    class Meta:
+        model = Event
+        fields = [
+            'id', 'title', 'owner', 'status', 'start_time', 'end_time', 'is_private', 'categories', 'member_count'
+        ]
+
 class EventSerializer(serializers.ModelSerializer):
     owner = serializers.StringRelatedField()
 
@@ -46,6 +56,8 @@ class EventSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'password': {'write_only': True},
         }
+
+
 
 
 class ItemSerializer(serializers.ModelSerializer):
