@@ -35,30 +35,26 @@ class LoginSerializer(serializers.Serializer):
         logger.info("Logowanie udane.")
         return user
     
-class EventSerializerForMobile(serializers.ModelSerializer):
-    owner = serializers.StringRelatedField()  # Nazwa wlasciciela zamiast ID
-    member_count = serializers.IntegerField(read_only=True)  # Liczba członków
+class MobileEventSerializer(serializers.ModelSerializer):
+    owner = serializers.StringRelatedField()
+    member_count = serializers.IntegerField(read_only=True)
     class Meta:
         model = Event
         fields = [
             'id', 'title', 'owner', 'status', 'start_time', 'end_time', 'is_private', 'categories', 'member_count'
         ]
 
-class EventSerializer(serializers.ModelSerializer):
-    owner = serializers.StringRelatedField()
+class OwnerEventSerializer(serializers.ModelSerializer):
+    owner_id = serializers.PrimaryKeyRelatedField(source='owner', read_only=True)
+    owner_name = serializers.StringRelatedField(source='owner')
+    member_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Event
         fields = [
-            'id', 'title', 'item_properties', 'default_values', 'owner',
-            'status', 'start_time', 'end_time', 'is_private', 'password', 'categories'
+            'id', 'title', 'item_properties', 'default_values', 'owner_id', 'owner_name',
+            'status', 'start_time', 'end_time', 'is_private', 'password', 'categories', 'member_count'
         ]
-        extra_kwargs = {
-            'password': {'write_only': True},
-        }
-
-
-
 
 class ItemSerializer(serializers.ModelSerializer):
     event = serializers.StringRelatedField()

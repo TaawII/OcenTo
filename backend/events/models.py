@@ -44,7 +44,7 @@ class User(AbstractBaseUser):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.username} ({self.role})"
+        return self.username
 
     # def has_perm(self, perm, obj=None):
     #     # Prosta implementacja: wszyscy użytkownicy mają wszystkie uprawnienia

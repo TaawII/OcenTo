@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Count
 from .models import User, Event
-from .serializers import EventSerializerForMobile
+from .serializers import MobileEventSerializer, OwnerEventSerializer
 import logging
 
 logger = logging.getLogger(__name__)
@@ -41,11 +41,11 @@ class LoginView(APIView):
             user = User.objects.get(username=username)
         except User.DoesNotExist:
             logger.warning("Nie znaleziono użytkownika w bazie danych.")
-            return Response({"error": "Nieprawidłowa nazwa użytkownika lub hasło"}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"error": "Nieprawidłowa nazwa użytkownika lub hasło"}, status=status.HTTP_400_BAD_REQUEST)
 
         if not check_password(password, user.password):
             logger.warning("Nieprawidłowe hasło.")
-            return Response({"error": "Nieprawidłowa nazwa użytkownika lub hasło"}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"error": "Nieprawidłowa nazwa użytkownika lub hasło"}, status=status.HTTP_400_BAD_REQUEST)
 
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
@@ -57,10 +57,18 @@ class LoginView(APIView):
             'token': access_token,
         }, status=status.HTTP_200_OK)
 
-class EventListMobileView(APIView):
+class MobileEventListView(APIView):
     def get(self, request):
         events = Event.objects.annotate(
-            member_count=Count('members')  # Liczba członków powiązanych z wydarzeniem
+            member_count=Count('members')
         )
-        serializer = EventSerializerForMobile(events, many=True)
+        serializer = MobileEventSerializer(events, many=True)
+        return Response(serializer.data)
+    
+class OwnerEventsListView(APIView):
+    def get(self, request):
+        events = Event.objects.annotate(
+            member_count=Count('members')
+        )
+        serializer = OwnerEventSerializer(events, many=True)
         return Response(serializer.data)
