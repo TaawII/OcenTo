@@ -1,0 +1,35 @@
+doctype html
+html
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title Tworzenie konta
+    link(rel="stylesheet", href="/stylesheets/register/style.css")
+  body
+    .container
+      .form-section
+        form(action="/register", method="POST", onsubmit="return validatePasswords()")
+          h1 Stwórz konto
+          input(type="text", name="username", placeholder="Nazwa użytkownika", required)
+          input(type="password", name="password", id="password", placeholder="Hasło", required)
+          input(type="password", name="confirmPassword", id="confirmPassword", placeholder="Powtórz hasło", required)
+          if error
+            .error-message(style="display:block; color:red; margin-top:10px;")
+              span= error
+          button.button Zarejestruj się
+          p(style="margin-top: 1rem; text-align: center;")
+            | Jeżeli posiadasz już konto 
+            a(href="/login", style="color: #6c63ff; text-decoration: none; font-weight: 600;") zaloguj się
+      .graphic-section
+    script.
+      function validatePasswords() {
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        
+        if (password !== confirmPassword) {
+          alert("Hasła muszą być identyczne!");
+          return false;
+        }
+        
+        return true;
+      }
