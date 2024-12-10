@@ -22,15 +22,19 @@ html
 
       label(for="categories") Categories
       div
-        input(type="checkbox" name="categories" value="Impreza") 
-        input(type="checkbox" name="categories" value="Piwo") 
-        input(type="checkbox" name="categories" value="Inna") 
+        label(for="Impreza") Impreza
+            input(type="checkbox" name="categories" value="Impreza") 
+      div
+        label(for="Piwo") Piwo
+            input(type="checkbox" name="categories" value="Piwo") 
+      div
+        label(for="Inna") Inna
+            input(type="checkbox" name="categories" value="Inna") 
 
       label(for="is_private") Private Event
-      input(type="checkbox" name="is_private")
-
-      label(for="password") Password (if private)
-      input(type="password" name="password")
+      input(type="checkbox" name="is_private" id="is_private")
+      label(for="password") Password
+      input(type="password" name="password" id="showPassword" disabled)
 
       // Dynamic Fields for Item Properties and Default Values
       label(for="item_properties") Item Properties (JSON)
@@ -44,6 +48,13 @@ html
       button(type="submit") Create Event
 
     script(src="https://code.jquery.com/jquery-3.6.0.min.js")
+    script.
+        is_private = false
+        document.getElementById("is_private").addEventListener('click', function() {
+            is_private = !is_private
+            document.getElementById("showPassword").disabled = !is_private
+            document.getElementById("showPassword").value = ""
+        })
     script.
       document.addEventListener('DOMContentLoaded', function() {
         const addButton = document.getElementById('add-field');
