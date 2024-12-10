@@ -1,12 +1,12 @@
 from django.contrib.auth.hashers import make_password, check_password
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Count
 from .models import User, Event
-from .serializers import MobileEventSerializer, OwnerEventSerializer
+from .serializers import MobileEventSerializer, OwnerEventSerializer, EventSerializer
 import logging
 
 logger = logging.getLogger(__name__)
@@ -64,7 +64,7 @@ class MobileEventListView(APIView):
         )
         serializer = MobileEventSerializer(events, many=True)
         return Response(serializer.data)
-    
+
 class OwnerEventsListView(APIView):
     def get(self, request):
         events = Event.objects.annotate(
@@ -72,3 +72,15 @@ class OwnerEventsListView(APIView):
         )
         serializer = OwnerEventSerializer(events, many=True)
         return Response(serializer.data)
+
+class CreateEventView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        data = request.data
+        data['owner'] = request.user.id
+        serializer = EventSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(owner=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -1,6 +1,8 @@
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
+from rest_framework.exceptions import ValidationError
+
 
 class UserManager(BaseUserManager):
     def create_user(self, username, password=None, role='user'):
@@ -54,10 +56,23 @@ class User(AbstractBaseUser):
     #     # Prosta implementacja: wszyscy użytkownicy mają dostęp do każdego modułu
     #     return True
 
+
+ALLOWED_CATEGORIES = {"inna", "impreza", "piwo"}
+
+
+def validate_categories(value):
+    if not isinstance(value, list):
+        raise ValidationError("Categories must be a list.")
+    for item in value:
+        if item not in ALLOWED_CATEGORIES:
+            raise ValidationError(f"Invalid category: {item}. Allowed categories are: {', '.join(ALLOWED_CATEGORIES)}")
+
+
 class Event(models.Model):
     id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=255)
-    item_properties = models.JSONField(help_text='Klucz wartości dla item na podstawie którego będą określane parametry podczas dodawania.')
+    item_properties = models.JSONField(
+        help_text='Klucz wartości dla item na podstawie którego będą określane parametry podczas dodawania.')
     default_values = models.JSONField(help_text='Wartości domyślne')
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_events')
     status = models.CharField(max_length=255)
@@ -65,11 +80,11 @@ class Event(models.Model):
     end_time = models.DateTimeField()
     is_private = models.BooleanField(default=False)
     password = models.CharField(max_length=255, blank=True, null=True)
-    categories = models.JSONField()
+    categories = models.JSONField(validators=[validate_categories])
+    image = models.BinaryField(blank=True, null=True)
 
     def __str__(self):
         return self.title
-
 
 class Item(models.Model):
     id = models.AutoField(primary_key=True)

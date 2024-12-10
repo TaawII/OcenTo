@@ -80,3 +80,8 @@ class ItemRatingSerializer(serializers.ModelSerializer):
     class Meta:
         model = ItemRating
         fields = ['user', 'item', 'rating_value', 'comment']
+
+class EventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        fields = '__all__'
