@@ -1,0 +1,95 @@
+doctype html
+html
+  head
+    title Add New Event
+    link(rel="stylesheet" href="/stylesheets/style.css")
+  body
+    h1 Add New Event
+    if error
+      p.error #{error}
+    form(action="/events/create" method="POST")
+      label(for="title") Event Name
+      input(type="text" name="title" required)
+
+      label(for="start_time") Start Date
+      input(type="datetime-local" name="start_time" required)
+
+      label(for="end_time") End Date
+      input(type="datetime-local" name="end_time" required)
+
+      label(for="status") Status
+      input(type="text" name="status" required)
+
+      label(for="categories") Categories
+      div
+        input(type="checkbox" name="categories" value="Impreza") 
+        input(type="checkbox" name="categories" value="Piwo") 
+        input(type="checkbox" name="categories" value="Inna") 
+
+      label(for="is_private") Private Event
+      input(type="checkbox" name="is_private")
+
+      label(for="password") Password (if private)
+      input(type="password" name="password")
+
+      // Dynamic Fields for Item Properties and Default Values
+      label(for="item_properties") Item Properties (JSON)
+      .fields-container
+        .field-row
+          input(type="text" name="item_properties" placeholder="Item Name" required)
+          input(type="text" name="default_values" placeholder="Default Value" required)
+          button(type="button" class="remove-field") - Remove
+
+      button(type="button" id="add-field") + Add New Field
+      button(type="submit") Create Event
+
+    script(src="https://code.jquery.com/jquery-3.6.0.min.js")
+    script.
+      document.addEventListener('DOMContentLoaded', function() {
+        const addButton = document.getElementById('add-field');
+        const fieldsContainer = document.querySelector('.fields-container');
+
+        // Add new field to the container
+        addButton.addEventListener('click', function() {
+          const newFieldRow = document.createElement('div');
+          newFieldRow.classList.add('field-row');
+          newFieldRow.innerHTML = `
+            <input type="text" name="item_properties" placeholder="Item Name" required>
+            <input type="text" name="default_values" placeholder="Default Value" required>
+            <button type="button" class="remove-field">- Remove</button>
+          `;
+          
+          // Add remove button functionality to the new row
+          newFieldRow.querySelector('.remove-field').addEventListener('click', function() {
+            newFieldRow.remove();
+          });
+
+          fieldsContainer.appendChild(newFieldRow);
+        });
+
+        // Add remove functionality to existing fields
+        document.querySelectorAll('.remove-field').forEach(button => {
+          button.addEventListener('click', function(event) {
+            event.target.closest('.field-row').remove();
+          });
+        });
+
+        // Validate the form data before submitting
+        document.querySelector('form').addEventListener('submit', function(event) {
+          let hasEmptyField = false;
+          const itemProperties = document.querySelectorAll('input[name="item_properties"]');
+          
+          // Check if any item_property field is empty before submission
+          itemProperties.forEach(input => {
+            if (!input.value) {
+              hasEmptyField = true;
+            }
+          });
+
+          // Prevent form submission if any fields are empty
+          if (hasEmptyField) {
+            alert('Please fill in all fields.');
+            event.preventDefault();
+          }
+        });
+      });
