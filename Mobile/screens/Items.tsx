@@ -61,11 +61,14 @@ export default function EventList() {
                   <Image source={{ uri: item.image }} style={styles.eventImage} />
                   <View style={styles.eventDetails}>
                     <Text style={styles.eventTitle}>{item.nazwa}</Text>
-                    {item.item_values.map((value: any, index: number) => (
-                      <Text key={index} style={styles.eventDate}>
-                        {itemsList.item_properties[index]}: {value}
-                      </Text>
-                    ))}
+                    {item.item_values.map((value: any, index: number) => {
+                      const property = value || itemsList.default_values[index];
+                      return (
+                        <Text key={index} style={styles.eventDate}>
+                          {itemsList.item_properties[index]}: {property}
+                        </Text>
+                      );
+                    })}
                   </View>
                 </View>
               </TouchableOpacity>
