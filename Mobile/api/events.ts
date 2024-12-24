@@ -14,13 +14,22 @@ export const getEvents = async (): Promise<any[]> => {
   }
 };
 
-// Funkcja, która pobiera wszystkie przedmioty danego eventu
+// Funkcja, która pobiera wszystkie itemy danego eventu
 export const getItems = async (eventId: Number): Promise<any[]> => {
   try {
-    const response = await axios.get(`${API_URL}/MobileItemsList?eventId=${eventId}`);
-    return response.data;
+    const response = await axios.get(`${API_URL}/MobileItemsList/${eventId}`);
+    if (response.status == 200) {
+      if (response.data.success == true) {
+        return response.data.data
+      } else {
+        return [];
+      }
+    } else {
+      console.error('Błąd podczas pobierania listy przedmiotów: ', response.data.error);
+      return [];
+    }
   } catch (error) {
-    console.error('Błąd podczas pobierania listy przedmiotów: ', error);
+    console.error('Nieznany błąd podczas pobierania listy przedmiotów: ', error);
     return [];
   }
 };
@@ -48,16 +57,16 @@ export const isPermissionToShowItems = async (eventId: Number): Promise<any> => 
 // Funkcja umożliwiająca dołaczenie do eventu
 export const joinEvent = async (eventId: Number, password: string): Promise<any> => {
   try {
-    const response = await axios.post(`${API_URL}/JoinEvent`,{eventId, password});
+    const response = await axios.post(`${API_URL}/JoinEvent`, { eventId, password });
     if (response.status == 200) {
       if (response.data.success == true) {
-        return {success: true}
+        return { success: true }
       } else {
-        return {success: false, message:response.data.message}
+        return { success: false, message: response.data.message }
       }
     } else {
       console.error('Błąd podczas dodawania uzytkownika do danego wydarzenia: ', response.data.error);
-      return {success: false, message:'Wystąpił nieznany bład, spróbuj ponownie za chwile.'};
+      return { success: false, message: 'Wystąpił nieznany bład, spróbuj ponownie za chwile.' };
     }
   } catch (error) {
     console.error('Nieznany błąd podczas dodawania uzytkownika do danego wydarzenia: ', error);

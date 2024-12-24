@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Count
 from .models import User, Event, Item
-from .serializers import MobileEventSerializer, OwnerEventSerializer, EventSerializer, ItemSerializer, EventMember
+from .serializers import MobileEventSerializer, OwnerEventSerializer, EventSerializer, ItemSerializer, EventMember, MobileEventItemSerializer
 import logging
 
 logger = logging.getLogger(__name__)
@@ -86,13 +86,14 @@ class CreateEventView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class MobileItemsListView(APIView):
-    def get(self, request):
-        print(request.user.id)
-        item_event_id = request.query_params.get('eventId')
-        
-        item = Item.objects.filter(event_id=item_event_id)
-        serializer = ItemSerializer(item, many=True)
-        return Response(serializer.data)
+    def get(self, request, event_id):
+        user_id = request.user.id
+        is_member = EventMember.objects.filter(user_id=user_id, event_id=event_id).exists()
+        if is_member:
+            event = Event.objects.prefetch_related('items').get(id=event_id)
+            serializer = MobileEventItemSerializer(event)
+            return Response({'success': True, 'data':serializer.data}, status=status.HTTP_200_OK)
+        return Response({'success': False}, status=status.HTTP_200_OK)
     
 
 class CheckEventMembership(APIView):
@@ -128,3 +129,5 @@ class JoinEvent(APIView):
         
         EventMember.objects.create(user_id=user_id, event_id=event_id)
         return Response({'success': True}, status=status.HTTP_200_OK)
+    
+

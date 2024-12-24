@@ -3,23 +3,35 @@ import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, Alert, Mod
 import { getItems } from '../api/events';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
+import { useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
+import { RootStackParamList } from "../App";
+
+type ItemsScreenRouteProp = RouteProp<RootStackParamList, 'Items'>;
 
 export default function EventList() {
+  const route = useRoute<ItemsScreenRouteProp>();
+  const { eventId } = route.params;
   const { onLogout } = useAuth();
-  const [items, setItems] = useState<any[]>([]);
-  const [categoryList, setCategoryList] = useState<any[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('Wszystkie');
-  const [modalVisible, setModalVisible] = useState(false);
+  const [itemsList, setItems] = useState<any>();
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const load = async () => {
-    //   const result = await getItems();
-    //   setItems(result);
-    //   const category = ['Wszystkie', ...new Set(result.flatMap(event => event.categories))];
-    //   setCategoryList(category);
-    };
-    load();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      const load = async () => {
+        try {
+          setLoading(true);
+          const result = await getItems(eventId);
+          setItems(result)
+        } catch (error) {
+          console.error("Błąd ładowania danych:", error)
+          setItems([])
+        } finally {
+          setLoading(false);
+        }
+      };
+      load();
+    }, [eventId])
+  );
 
   const logout = async () => {
     const result = await onLogout!();
@@ -28,72 +40,38 @@ export default function EventList() {
     }
   };
 
-  const getFilteredEvents = () => {
-    let filtered = items;
-
-    if (selectedCategory !== 'Wszystkie') {
-      filtered = filtered.filter(event => event.categories.includes(selectedCategory));
-    }
-
-    return filtered;
-  };
-
-  const filteredEvents = getFilteredEvents();
-
   return (
     <SafeAreaView style={styles.container}>
-        {/* Filtry: Kategorie */}
-        <View style={styles.filterGroup}>
-          <Text style={styles.filterLabel}>Kategoria</Text>
-          <TouchableOpacity style={styles.filterButton} onPress={() => {setModalVisible(true); }}>
-            <Text style={styles.filterText}>{selectedCategory}</Text>
-          </TouchableOpacity>
-        </View>
-
       <ScrollView>
-        {/* Modal */}
-        <Modal
-      visible={modalVisible}
-      animationType="slide"
-      onRequestClose={() => setModalVisible(false)}
-    >
-      <View style={styles.modalContainer}>
-        <Text style={styles.modalHeader}>Kategorie</Text>
-        <FlatList
-          data={categoryList}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.modalItem}
-              onPress={() => {
-                setSelectedCategory(item);
-                setModalVisible(false);
-              }}
-            >
-              <Text style={styles.modalItemText}>{item}</Text>
-            </TouchableOpacity>
-          )}
-          keyExtractor={(item, index) => item + index}
-        />
-        <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
-          <Text style={styles.closeButtonText}>Zamknij</Text>
-        </TouchableOpacity>
-      </View>
-    </Modal>
-
-        {/* Lista wydarzeń */}
-        <Text style={styles.header}>Lista wydarzeń</Text>
-        {filteredEvents.map((item) => (
-          <View key={item.id} style={styles.eventCard}>
-            <Image source={{ uri: item.image }} style={styles.eventImage} />
-            <View style={styles.eventDetails}>
-              <Text style={styles.eventTitle}>{item.title}</Text>
-              <Text style={styles.eventDate}>Rozpoczęcie: {item.start_time}</Text>
-              <Text style={styles.eventDate}>Zakończenie: {item.end_time}</Text>
-              <Text style={styles.eventDescription}>Zarządca: {item.owner}</Text>
-              <Text style={styles.peopleCount}>Ilość uczestników: {item.member_count}</Text>
-            </View>
-          </View>
-        ))}
+        {!loading && itemsList && itemsList.title && (
+          <Text style={styles.header}>{itemsList.title}</Text>
+        )}
+        {loading ? (
+          <Text style={styles.loadingText}>Ładowanie...</Text>
+        ) : itemsList.items.length === 0 ? (
+          <Text style={styles.noDataText}>To wydarzenie wydaje się być puste :o</Text>
+        ) : (
+          itemsList.items.map((item: any) => {
+            return (
+              <TouchableOpacity
+                key={item.id}
+              // onPress={() => checkPermissions(item)}
+              >
+                <View key={item.id} style={styles.eventCard}>
+                  <Image source={{ uri: item.image }} style={styles.eventImage} />
+                  <View style={styles.eventDetails}>
+                    <Text style={styles.eventTitle}>{item.nazwa}</Text>
+                    {item.item_values.map((value: any, index: number) => (
+                      <Text key={index} style={styles.eventDate}>
+                        {itemsList.item_properties[index]}: {value}
+                      </Text>
+                    ))}
+                  </View>
+                </View>
+              </TouchableOpacity>
+            );
+          })
+        )}
       </ScrollView>
 
       <View style={styles.logoutContainer}>
@@ -111,6 +89,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     paddingTop: 10,
   },
+  loadingText: {
+    textAlign: 'center',
+    marginVertical: 20,
+    fontSize: 16,
+  },
+  noDataText: {
+    textAlign: 'center',
+    marginVertical: 20,
+    fontSize: 16,
+    color: 'gray',
+  },
   logoutContainer: {
     position: 'absolute',
     bottom: 20,
@@ -127,68 +116,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  filterRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    marginBottom: 20,
-  },
-  filterGroup: {
-    flex: 1,
-    marginHorizontal: 5,
-    alignItems: 'center',
-  },
-  filterLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 5,
-  },
-  filterButton: {
-    width: '100%',
-    paddingVertical: 10,
-    backgroundColor: '#0066cc',
-    borderRadius: 30,
-    alignItems: 'center',
-  },
-  filterText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: '#fff',
-    padding: 20,
-  },
-  modalHeader: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  modalItem: {
-    padding: 10,
-    backgroundColor: '#f1f1f1',
-    marginBottom: 10,
-    borderRadius: 8,
-  },
-  modalItemText: {
-    fontSize: 18,
-    color: '#333',
-  },
-  closeButton: {
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: '#0066cc',
-    borderRadius: 8,
-  },
-  closeButtonText: {
-    color: '#fff',
-    fontSize: 16,
     textAlign: 'center',
   },
   header: {
@@ -222,16 +149,6 @@ const styles = StyleSheet.create({
   eventTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-  },
-  lockContainer: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    padding: 4,
-  },
-  lockIcon: {
-    fontSize: 16,
-    color: '#fff',
   },
   eventDate: {
     fontSize: 14,

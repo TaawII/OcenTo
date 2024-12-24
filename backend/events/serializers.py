@@ -85,3 +85,15 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = '__all__'
+
+class MobileItemEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Item
+        fields = ['id', 'nazwa', 'item_values', 'image']
+
+class MobileEventItemSerializer(serializers.ModelSerializer):
+    items = MobileItemEventSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Event
+        fields = ['id', 'title', 'item_properties', 'default_values', 'items', 'status']
