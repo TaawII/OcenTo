@@ -3,13 +3,69 @@ import axios from 'axios';
 // Adres URL Twojego API
 const API_URL = 'http://192.168.137.1:8000/api/events'; // Zmień to na odpowiedni URL
 
-// Funkcja, która pobiera dane
+// Funkcja, która pobiera wszystkie eventy
 export const getEvents = async (): Promise<any[]> => {
   try {
     const response = await axios.get(`${API_URL}/MobileEventsList`);
     return response.data;
   } catch (error) {
     console.error('Błąd podczas pobierania wydarzeń: ', error);
-    throw error;
+    return [];
   }
 };
+
+// Funkcja, która pobiera wszystkie przedmioty danego eventu
+export const getItems = async (eventId: Number): Promise<any[]> => {
+  try {
+    const response = await axios.get(`${API_URL}/MobileItemsList?eventId=${eventId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Błąd podczas pobierania listy przedmiotów: ', error);
+    return [];
+  }
+};
+
+// Funckja do sprawdzania czy jestesmy uczestnikami danego eventu
+export const isPermissionToShowItems = async (eventId: Number): Promise<any> => {
+  try {
+    const response = await axios.get(`${API_URL}/CheckEventMembership?eventId=${eventId}`);
+    if (response.status == 200) {
+      if (response.data.success == true) {
+        return true
+      } else {
+        return false
+      }
+    } else {
+      console.error('Błąd podczas sprawdzania czy uzytkownik nalezy do danego wydarzenia: ', response.data.error);
+      return null;
+    }
+  } catch (error) {
+    console.error('Nieznany błąd podczas sprawdzania czy uzytkownik nalezy do danego wydarzenia: ', error);
+    return null;
+  }
+};
+
+// Funkcja umożliwiająca dołaczenie do eventu
+export const joinEvent = async (eventId: Number, password: string): Promise<any> => {
+  try {
+    const response = await axios.post(`${API_URL}/JoinEvent`,{eventId, password});
+    if (response.status == 200) {
+      if (response.data.success == true) {
+        return {success: true}
+      } else {
+        return {success: false, message:response.data.message}
+      }
+    } else {
+      console.error('Błąd podczas dodawania uzytkownika do danego wydarzenia: ', response.data.error);
+      return {success: false, message:'Wystąpił nieznany bład, spróbuj ponownie za chwile.'};
+    }
+  } catch (error) {
+    console.error('Nieznany błąd podczas dodawania uzytkownika do danego wydarzenia: ', error);
+    return null;
+  }
+};
+
+// Testowanie czasu zapytan
+// const startTime = new Date().getTime();  // Zapisz czas wysłania zapytania
+// const endTime = new Date().getTime();  // Zapisz czas zakończenia zapytania
+// console.log(`Czas wykonywania zapytania ${endTime - startTime} ms`);

@@ -5,8 +5,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Count
-from .models import User, Event
-from .serializers import MobileEventSerializer, OwnerEventSerializer, EventSerializer
+from .models import User, Event, Item
+from .serializers import MobileEventSerializer, OwnerEventSerializer, EventSerializer, ItemSerializer, EventMember
 import logging
 
 logger = logging.getLogger(__name__)
@@ -57,7 +57,7 @@ class LoginView(APIView):
             'token': access_token,
         }, status=status.HTTP_200_OK)
 
-class MobileEventListView(APIView):
+class MobileEventsListView(APIView):
     def get(self, request):
         events = Event.objects.annotate(
             member_count=Count('members')
@@ -84,3 +84,47 @@ class CreateEventView(APIView):
             serializer.save(owner=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class MobileItemsListView(APIView):
+    def get(self, request):
+        print(request.user.id)
+        item_event_id = request.query_params.get('eventId')
+        
+        item = Item.objects.filter(event_id=item_event_id)
+        serializer = ItemSerializer(item, many=True)
+        return Response(serializer.data)
+    
+
+class CheckEventMembership(APIView):
+    def get(self, request):
+        user_id = request.user.id
+        event_id = request.query_params.get('eventId')
+
+        if not user_id or not event_id:
+            logger.warning("user_id i event_id są wymagane.")
+            return Response({'error': 'user_id i event_id są wymagane'}, status=status.HTTP_400_BAD_REQUEST)
+
+        is_member = EventMember.objects.filter(user_id=user_id, event_id=event_id).exists()
+
+        if is_member:
+            return Response({'success': True}, status=status.HTTP_200_OK)
+        return Response({'success': False}, status=status.HTTP_200_OK)
+    
+class JoinEvent(APIView):
+    def post(self, request):
+        user_id = request.user.id
+        event_id = request.data.get('eventId')
+        password = request.data.get('password','')
+
+        event = Event.objects.get(id = event_id)
+
+        if event.is_private:
+            if not password == event.password:
+                return Response({'success': False, 'message': 'Błędne hasło.'}, status=status.HTTP_200_OK)
+
+        is_member = EventMember.objects.filter(user_id=user_id, event_id=event_id).exists()
+        if is_member:
+            return Response({'success': False, 'message': 'Użytkownik nalezy już do tego eventu.'}, status=status.HTTP_200_OK)
+        
+        EventMember.objects.create(user_id=user_id, event_id=event_id)
+        return Response({'success': True}, status=status.HTTP_200_OK)

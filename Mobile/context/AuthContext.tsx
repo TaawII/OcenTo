@@ -94,6 +94,7 @@ export const AuthProvider = ({ children }: any) => {
             token: null,
             authenticated: false
         });
+        return true
     }
 
     const value = {

@@ -5,6 +5,7 @@ import SignUpForm from "./screens/auth/SignUpForm";
 import SignInForm from "./screens/auth/SignInForm";
 import Events from "./screens/Events";
 import QRScanner from "./screens/QRScanner";
+import Items from "./screens/Items";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ActivityIndicator, View } from "react-native";
 
@@ -13,6 +14,7 @@ export type RootStackParamList = {
   SignIn: undefined;
   Events: undefined;
   QRScanner: undefined;
+  Items: { eventId: Number };
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -48,6 +50,15 @@ const AppNavigator: React.FC = () => {
             options={{
               headerShown: false,
               title: "QRScanner",
+              headerLeft: () => null,
+            }}
+          />
+          <Stack.Screen
+            name="Items"
+            component={Items}
+            options={{
+              headerShown: false,
+              title: "Items",
               headerLeft: () => null,
             }}
           />

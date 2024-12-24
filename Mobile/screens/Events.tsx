@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, Alert, Modal, FlatList } from 'react-native';
-import { getEvents } from '../api/events';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, Alert, Modal, FlatList, TextInput } from 'react-native';
+import { getEvents, isPermissionToShowItems, joinEvent } from '../api/events';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
+import { useNavigation, useFocusEffect  } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { RootStackParamList } from "../App";
+
+type NavigationProp = StackNavigationProp<RootStackParamList, "Items">;
 
 export default function EventList() {
+  const navigation = useNavigation<NavigationProp>();
+
   const { onLogout } = useAuth();
   const [events, setEvents] = useState<any[]>([]);
   const [categoryList, setCategoryList] = useState<any[]>([]);
@@ -12,22 +19,26 @@ export default function EventList() {
   const [selectedCategory, setSelectedCategory] = useState<string>('Wszystkie');
   const [modalVisible, setModalVisible] = useState(false);
   const [isCategoryModal, setIsCategoryModal] = useState(false);
+  const [password, setPassword] = useState('');
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [itemJoin, setItemJoin] = useState<any>(null);
+  const [passwordError, setPasswordError] = useState('');
 
-  useEffect(() => {
-    const load = async () => {
-      const result = await getEvents();
-      setEvents(result);
-      const category = ['Wszystkie', ...new Set(result.flatMap(event => event.categories))];
-      setCategoryList(category);
-    };
-    load();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      const load = async () => {
+        const result = await getEvents();
+        setEvents(result);
+        const category = ['Wszystkie', ...new Set(result.flatMap(event => event.categories))];
+        setCategoryList(category);
+      };
+      load();
+    }, [])
+  );
 
   const logout = async () => {
-    const result = await onLogout!();
-    if (result && result.error) {
-      Alert.alert("Błąd", result.msg);
-    }
+    if (await onLogout!())
+      navigation.navigate("SignIn")
   };
 
   const getFilteredEvents = () => {
@@ -48,29 +59,60 @@ export default function EventList() {
 
   const filteredEvents = getFilteredEvents();
 
+  const checkPermissions = async (item: any) => {
+    const isPermissions = await isPermissionToShowItems(item.id);
+    if (isPermissions === true) {
+      navigation.navigate("Items", { eventId: item.id });
+    } else if (isPermissions === false) {
+      resetModal()
+      setItemJoin(item)
+      setShowPasswordModal(true);
+    } else {
+      Alert.alert('Błąd', 'Wystąpił nieznany problem, spróbuj ponownie za chwile.');
+    }
+  };
+
+  const checkJoinEvent = async () => {
+    if (itemJoin.is_private && !password) {
+      setPasswordError('Hasło jest wymagane');
+    } else {
+      const isJoin = await joinEvent(itemJoin.id, password)
+      if (isJoin.success === true)
+      {
+        navigation.navigate("Items", { eventId: itemJoin.id });
+        resetModal()
+      }else{
+        setPasswordError(isJoin.message);
+      }
+    }
+  };
+
+  const resetModal = () => {
+    setPasswordError('');
+    setShowPasswordModal(false);
+    setPassword('');
+    setItemJoin(null);
+  }
+
   return (
     <SafeAreaView style={styles.container}>
-              <View style={styles.filterRow}>
-          {/* Filtry: Dostępność */}
-          <View style={styles.filterGroup}>
-            <Text style={styles.filterLabel}>Dostępność</Text>
-            <TouchableOpacity style={styles.filterButton} onPress={() => { setIsCategoryModal(false); setModalVisible(true); }}>
-              <Text style={styles.filterText}>{selectedFilter}</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Filtry: Kategorie */}
-          <View style={styles.filterGroup}>
-            <Text style={styles.filterLabel}>Kategoria</Text>
-            <TouchableOpacity style={styles.filterButton} onPress={() => { setIsCategoryModal(true); setModalVisible(true); }}>
-              <Text style={styles.filterText}>{selectedCategory}</Text>
-            </TouchableOpacity>
-          </View>
+      <View style={styles.filterRow}>
+        <View style={styles.filterGroup}>
+          <Text style={styles.filterLabel}>Dostępność</Text>
+          <TouchableOpacity style={styles.filterButton} onPress={() => { setIsCategoryModal(false); setModalVisible(true); }}>
+            <Text style={styles.filterText}>{selectedFilter}</Text>
+          </TouchableOpacity>
         </View>
+
+        <View style={styles.filterGroup}>
+          <Text style={styles.filterLabel}>Kategoria</Text>
+          <TouchableOpacity style={styles.filterButton} onPress={() => { setIsCategoryModal(true); setModalVisible(true); }}>
+            <Text style={styles.filterText}>{selectedCategory}</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
       <ScrollView>
-
-
-        {/* Modal */}
         <Modal
           visible={modalVisible}
           animationType="slide"
@@ -103,24 +145,63 @@ export default function EventList() {
           </View>
         </Modal>
 
-        {/* Lista wydarzeń */}
-        <Text style={styles.header}>Lista wydarzeń</Text>
-        {filteredEvents.map((item) => (
-          <View key={item.id} style={styles.eventCard}>
-            {item.is_private && (
-              <View style={styles.lockContainer}>
-                <Text style={styles.lockIcon}>🔒</Text>
+        <Modal visible={showPasswordModal} transparent>
+          <View style={styles.passwordModalOverlay}>
+            <View style={styles.passwordModalContainer}>
+              {itemJoin && (
+                <>
+                  <Text style={styles.modalHeaderBold}>
+                    Czy chcesz dołączyć do: {itemJoin.title}?
+                  </Text>
+
+                  {itemJoin.is_private && (
+                    <>
+                      <TextInput
+                        style={styles.inputModal}
+                        secureTextEntry
+                        value={password}
+                        onChangeText={setPassword}
+                        placeholder="Hasło"
+                      />
+                      {passwordError ? <Text style={styles.errorModalText}>{passwordError}</Text> : null}
+                    </>
+                  )}
+                </>
+              )}
+              <View style={styles.buttonModalContainer}>
+                <TouchableOpacity style={styles.closeModalButton} onPress={resetModal}>
+                  <Text style={styles.closeModalButtonText}>Anuluj</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.closeModalButton} onPress={checkJoinEvent}>
+                  <Text style={styles.closeModalButtonText}>Dołącz</Text>
+                </TouchableOpacity>
               </View>
-            )}
-            <Image source={{ uri: item.image }} style={styles.eventImage} />
-            <View style={styles.eventDetails}>
-              <Text style={styles.eventTitle}>{item.title}</Text>
-              <Text style={styles.eventDate}>Rozpoczęcie: {item.start_time}</Text>
-              <Text style={styles.eventDate}>Zakończenie: {item.end_time}</Text>
-              <Text style={styles.eventDescription}>Zarządca: {item.owner}</Text>
-              <Text style={styles.peopleCount}>Ilość uczestników: {item.member_count}</Text>
             </View>
           </View>
+        </Modal>
+
+        <Text style={styles.header}>Lista wydarzeń</Text>
+        {filteredEvents.map((item) => (
+          <TouchableOpacity
+            key={item.id}
+            onPress={() => checkPermissions(item)}
+          >
+            <View key={item.id} style={styles.eventCard}>
+              {item.is_private && (
+                <View style={styles.lockContainer}>
+                  <Text style={styles.lockIcon}>🔒</Text>
+                </View>
+              )}
+              <Image source={{ uri: item.image }} style={styles.eventImage} />
+              <View style={styles.eventDetails}>
+                <Text style={styles.eventTitle}>{item.title}</Text>
+                <Text style={styles.eventDate}>Rozpoczęcie: {item.start_time}</Text>
+                <Text style={styles.eventDate}>Zakończenie: {item.end_time}</Text>
+                <Text style={styles.eventDescription}>Zarządca: {item.owner}</Text>
+                <Text style={styles.peopleCount}>Ilość uczestników: {item.member_count}</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
         ))}
       </ScrollView>
     </SafeAreaView>
@@ -132,6 +213,68 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     paddingTop: 10,
+  },
+  passwordModalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  passwordModalContainer: {
+    width: '80%',
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  inputModal: {
+    width: '100%',
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  errorModalText: {
+    color: 'red',
+    fontSize: 14,
+    marginTop: 5,
+  },
+  buttonModalContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 20,
+  },
+  closeModalButton: {
+    padding: 10,
+    backgroundColor: '#0066cc',
+    borderRadius: 8,
+    width: '48%',
+    alignItems: 'center',
+  },
+  closeModalButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  logoutContainer: {
+    position: 'absolute',
+    bottom: 20,
+    width: '100%',
+    alignItems: 'center',
+  },
+  logoutButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: '#cc0000',
+    borderRadius: 30,
+  },
+  logoutButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   filterRow: {
     flexDirection: 'row',
@@ -151,10 +294,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 5,
   },
-  filterContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
   filterButton: {
     width: '100%',
     paddingVertical: 10,
@@ -173,6 +312,11 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalHeader: {
+    fontSize: 20,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  modalHeaderBold: {
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 20,
