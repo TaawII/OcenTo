@@ -1,5 +1,5 @@
 from django.contrib.auth.hashers import make_password, check_password
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -7,6 +7,7 @@ from rest_framework import status
 from django.db.models import Count
 from .models import User, Event, Item
 from .serializers import MobileEventSerializer, OwnerEventSerializer, EventSerializer, ItemSerializer, EventMember, MobileEventItemSerializer
+from rest_framework.authentication import get_authorization_header
 import logging
 
 logger = logging.getLogger(__name__)
@@ -95,8 +96,7 @@ class MobileItemsListView(APIView):
             return Response({'success': True, 'data':serializer.data}, status=status.HTTP_200_OK)
         return Response({'success': False}, status=status.HTTP_200_OK)
     
-
-class CheckEventMembership(APIView):
+class CheckEventMembershipView(APIView):
     def get(self, request):
         user_id = request.user.id
         event_id = request.query_params.get('eventId')
@@ -111,7 +111,7 @@ class CheckEventMembership(APIView):
             return Response({'success': True}, status=status.HTTP_200_OK)
         return Response({'success': False}, status=status.HTTP_200_OK)
     
-class JoinEvent(APIView):
+class JoinEventView(APIView):
     def post(self, request):
         user_id = request.user.id
         event_id = request.data.get('eventId')
@@ -130,4 +130,17 @@ class JoinEvent(APIView):
         EventMember.objects.create(user_id=user_id, event_id=event_id)
         return Response({'success': True}, status=status.HTTP_200_OK)
     
+class VerifyTokenView(APIView):
+    permission_classes = [AllowAny]
 
+    def get(self, request):
+        auth_header = get_authorization_header(request).decode('utf-8')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return Response({'success': False, 'message': 'Brak tokenu lub niepoprawny format'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        token = auth_header.split(' ')[1]
+        try:
+            AccessToken(token)
+            return Response({'success': True, 'message': 'Token jest prawidłowy'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'success': False, 'message': str(e)}, status=status.HTTP_401_UNAUTHORIZED)

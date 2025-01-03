@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, Alert, Modal, FlatList } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, Alert, Modal, FlatList, ActivityIndicator } from 'react-native';
 import { getItems } from '../api/events';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from "../App";
+import { Rating } from 'react-native-ratings';
 
 type ItemsScreenRouteProp = RouteProp<RootStackParamList, 'Items'>;
 
@@ -14,6 +15,9 @@ export default function EventList() {
   const { onLogout } = useAuth();
   const [itemsList, setItems] = useState<any>();
   const [loading, setLoading] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [sortBy, setSortBy] = useState<'name' | 'rating'>('name');
 
   useFocusEffect(
     React.useCallback(() => {
@@ -40,14 +44,81 @@ export default function EventList() {
     }
   };
 
+  const sortItems = (order: 'asc' | 'desc', by: 'name' | 'rating') => {
+    const sortedItems = [...itemsList.items].sort((a, b) => {
+      if (by === 'name') {
+        if (order === 'asc') {
+          return a.nazwa.localeCompare(b.nazwa);
+        } else {
+          return b.nazwa.localeCompare(a.nazwa);
+        }
+      } else {
+        if (order === 'asc') {
+          return a.average_rating - b.average_rating;
+        } else {
+          return b.average_rating - a.average_rating;
+        }
+      }
+    });
+    setItems((prevState: any) => ({ ...prevState, items: sortedItems }));
+    setSortOrder(order);
+    setSortBy(by);
+  };
+
+  const toggleModal = () => {
+    setModalVisible(!modalVisible);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
+        {!loading && itemsList && itemsList.items.length > 0 && (
+          <TouchableOpacity style={styles.sortButton} onPress={toggleModal}>
+            <Text style={styles.sortButtonText}>Sortuj</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Modal z opcjami sortowania */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={toggleModal}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Wybierz sortowanie</Text>
+              <TouchableOpacity onPress={() => { sortItems('asc', 'name'); toggleModal(); }}>
+                <Text style={[styles.modalOption, sortOrder === 'asc' && sortBy === 'name' && styles.selectedOption]}>Sortuj rosnąco po nazwie</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => { sortItems('desc', 'name'); toggleModal(); }}>
+                <Text style={[styles.modalOption, sortOrder === 'desc' && sortBy === 'name' && styles.selectedOption]}>Sortuj malejąco po nazwie</Text>
+              </TouchableOpacity>
+              {itemsList && itemsList.status === "END" && (
+                <>
+                  <TouchableOpacity onPress={() => { sortItems('asc', 'rating'); toggleModal(); }}>
+                    <Text style={[styles.modalOption, sortOrder === 'asc' && sortBy === 'rating' && styles.selectedOption]}>Sortuj rosnąco po ocenie</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => { sortItems('desc', 'rating'); toggleModal(); }}>
+                    <Text style={[styles.modalOption, sortOrder === 'desc' && sortBy === 'rating' && styles.selectedOption]}>Sortuj malejąco po ocenie</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+              <TouchableOpacity onPress={toggleModal}>
+                <Text style={styles.modalClose}>Zamknij</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
         {!loading && itemsList && itemsList.title && (
           <Text style={styles.header}>{itemsList.title}</Text>
         )}
         {loading ? (
-          <Text style={styles.loadingText}>Ładowanie...</Text>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#0066cc" />
+            <Text style={styles.loadingText}>Ładowanie...</Text>
+          </View>
         ) : itemsList.items.length === 0 ? (
           <Text style={styles.noDataText}>To wydarzenie wydaje się być puste :o</Text>
         ) : (
@@ -55,7 +126,6 @@ export default function EventList() {
             return (
               <TouchableOpacity
                 key={item.id}
-              // onPress={() => checkPermissions(item)}
               >
                 <View key={item.id} style={styles.eventCard}>
                   <Image source={{ uri: item.image }} style={styles.eventImage} />
@@ -69,6 +139,16 @@ export default function EventList() {
                         </Text>
                       );
                     })}
+                    {itemsList.status === "END" ? (
+                      <Text style={styles.eventDate}>Średnia ocena: {item.average_rating}</Text>
+                      // <Rating
+                      //   ratingCount={5}
+                      //   imageSize={32}
+                      //   startingValue={item.average_rating}
+                      //   fractions={1}
+                      //   readonly={true}
+                      // />
+                    ) : null}
                   </View>
                 </View>
               </TouchableOpacity>
@@ -76,12 +156,6 @@ export default function EventList() {
           })
         )}
       </ScrollView>
-
-      <View style={styles.logoutContainer}>
-        <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-          <Text style={styles.logoutButtonText}>Wyloguj</Text>
-        </TouchableOpacity>
-      </View>
     </SafeAreaView>
   );
 }
@@ -90,36 +164,53 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingTop: 10,
   },
-  loadingText: {
-    textAlign: 'center',
-    marginVertical: 20,
-    fontSize: 16,
-  },
-  noDataText: {
-    textAlign: 'center',
-    marginVertical: 20,
-    fontSize: 16,
-    color: 'gray',
-  },
-  logoutContainer: {
-    position: 'absolute',
-    bottom: 20,
-    width: '100%',
-    alignItems: 'center',
-  },
-  logoutButton: {
+  sortButton: {
     paddingVertical: 10,
     paddingHorizontal: 20,
-    backgroundColor: '#cc0000',
-    borderRadius: 30,
+    backgroundColor: '#0066cc',
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 20,
+    alignSelf: 'center',
   },
-  logoutButtonText: {
+  sortButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: 300,
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
     textAlign: 'center',
+  },
+  modalOption: {
+    fontSize: 16,
+    paddingVertical: 10,
+    textAlign: 'center',
+  },
+  selectedOption: {
+    fontWeight: 'bold',
+    color: '#0066cc',
+  },
+  modalClose: {
+    fontSize: 16,
+    paddingVertical: 10,
+    textAlign: 'center',
+    color: '#cc0000',
   },
   header: {
     fontSize: 22,
@@ -157,13 +248,39 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#777',
   },
-  eventDescription: {
-    fontSize: 14,
-    marginVertical: 8,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 50,
   },
-  peopleCount: {
-    fontSize: 14,
-    fontWeight: 'bold',
+  loadingText: {
+    fontSize: 16,
     color: '#0066cc',
+    marginTop: 10,
+  },
+  noDataText: {
+    textAlign: 'center',
+    marginVertical: 20,
+    fontSize: 16,
+    color: 'gray',
+  },
+  logoutContainer: {
+    position: 'absolute',
+    bottom: 20,
+    width: '100%',
+    alignItems: 'center',
+  },
+  logoutButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: '#cc0000',
+    borderRadius: 30,
+  },
+  logoutButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
