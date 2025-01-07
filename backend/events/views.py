@@ -5,8 +5,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Count
-from .models import User, Event, Item
-from .serializers import MobileEventSerializer, OwnerEventSerializer, EventSerializer, ItemSerializer, EventMember, MobileEventItemSerializer
+from .models import User, Event, Item, ItemRating
+from .serializers import MobileEventSerializer, OwnerEventSerializer, EventSerializer, ItemSerializer, EventMember, MobileEventItemSerializer, ItemRatingSerializer, ItemDetailSerializer, ItemRatingDetailSerializer
 from rest_framework.authentication import get_authorization_header
 import logging
 
@@ -144,3 +144,43 @@ class VerifyTokenView(APIView):
             return Response({'success': True, 'message': 'Token jest prawidłowy'}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'success': False, 'message': str(e)}, status=status.HTTP_401_UNAUTHORIZED)
+        
+class MobileItemDetailsView(APIView):
+    def get(self, request, item_id):
+        user_id = request.user.id
+        user_username = request.user.username
+        item = Item.objects.get(id=item_id)
+        item_data = ItemDetailSerializer(item).data
+        
+        item_ratings = ItemRating.objects.filter(item_id=item_id)
+        ratings_data = ItemRatingDetailSerializer(item_ratings, many=True).data
+        ratings_data = [
+            rating for rating in ratings_data
+            if (rating.get('comment') is not None or rating.get('rating_value') is not None) and rating.get('user') != user_username
+        ]
+
+        user_rating = ItemRating.objects.filter(item_id=item_id, user_id=user_id).first()
+        user_rating_data = ItemRatingSerializer(user_rating).data if user_rating else None
+
+        rating = [item_data, ratings_data, user_rating_data]
+        
+        return Response({'success': True, 'data': rating}, status=status.HTTP_200_OK)
+
+class ItemRatingAddOrModifyView(APIView):
+    def post(self, request):
+        rating_value = request.data.get('rating_value')
+        comment = request.data.get('comment')
+        item_id = request.data.get('item_id')
+        user_id = request.user.id
+
+        created = ItemRating.objects.update_or_create(
+            item_id=item_id, user_id=user_id,
+            defaults={'rating_value': rating_value, 'comment': comment}
+        )
+
+        if created:
+            message = "Komentarz został dodany pomyślnie"
+        else:
+            message = "Komentarz został zaktualizowany pomyślnie"
+
+        return Response({"message": message}, status=status.HTTP_200_OK)

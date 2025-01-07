@@ -6,8 +6,9 @@ import SignInForm from "./screens/auth/SignInForm";
 import Events from "./screens/Events";
 import QRScanner from "./screens/QRScanner";
 import Items from "./screens/Items";
+import ItemDetails from "./screens/ItemDetails";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import { ActivityIndicator, Button, View, Alert, TouchableOpacity, Text, StyleSheet } from "react-native";
+import { ActivityIndicator, View, Alert, TouchableOpacity, Text, StyleSheet } from "react-native";
 
 export type RootStackParamList = {
   SignUp: undefined;
@@ -15,6 +16,7 @@ export type RootStackParamList = {
   Events: undefined;
   QRScanner: undefined;
   Items: { eventId: number };
+  ItemDetails: { itemId: number };
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -46,9 +48,9 @@ const AppNavigator: React.FC = () => {
             component={Events}
             options={{
               headerShown: true,
-              title: "Events",
               headerLeft: () => null,
-              headerTitle: () => null,
+              headerTitleAlign: 'center',
+              title: "OcenTo",
               headerRight: () => (
                 <TouchableOpacity style={styles.logoutButton} onPress={logout}>
                   <Text style={styles.logoutButtonText}>Wyloguj</Text>
@@ -63,6 +65,19 @@ const AppNavigator: React.FC = () => {
               headerShown: true,
               headerTitle: () => null,
               title: "Items",
+              headerRight: () => (
+                <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+                  <Text style={styles.logoutButtonText}>Wyloguj</Text>
+                </TouchableOpacity>
+              ),
+            }}
+          />
+          <Stack.Screen
+            name="ItemDetails"
+            component={ItemDetails}
+            options={{
+              headerShown: true,
+              headerTitle: () => null,
               headerRight: () => (
                 <TouchableOpacity style={styles.logoutButton} onPress={logout}>
                   <Text style={styles.logoutButtonText}>Wyloguj</Text>

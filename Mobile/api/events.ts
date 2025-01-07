@@ -74,6 +74,28 @@ export const joinEvent = async (eventId: Number, password: string): Promise<any>
   }
 };
 
+//Funkcja do pobierania szczegółów przedmiotu
+export const getItemDetails = async (itemId: Number): Promise<any[]> => {
+  try {
+    const response = await axios.get(`${API_URL}/MobileItemDetails/${itemId}`);
+    return response.data.data;
+  } catch (error) {
+    console.error('Błąd podczas pobierania wydarzeń: ', error);
+    return [];
+  }
+};
+
+// Funkcja do dodawania lub modyfikowania oceny przedmiotu
+export const addOrModifyItemRating = async (item_id: Number, rating_value: Number, comment: String): Promise<any[]> => {
+  try {
+    const response = await axios.post(`${API_URL}/AddOrModifyRating`, {item_id, rating_value, comment});
+    return response.data.data;
+  } catch (error) {
+    console.error('Błąd podczas pobierania wydarzeń: ', error);
+    return [];
+  }
+};
+
 // Testowanie czasu zapytan
 // const startTime = new Date().getTime();  // Zapisz czas wysłania zapytania
 // const endTime = new Date().getTime();  // Zapisz czas zakończenia zapytania

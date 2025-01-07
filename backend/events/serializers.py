@@ -108,3 +108,42 @@ class MobileEventItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = ['id', 'title', 'item_properties', 'default_values', 'items', 'status']
+
+
+class ItemDetailSerializer(serializers.ModelSerializer):
+    average_rating = serializers.SerializerMethodField()
+    vote_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Item
+        fields = ['id', 'nazwa', 'item_values', 'image', 'average_rating', 'vote_count']
+
+    def get_average_rating(self, obj):
+        event = obj.event
+        if event.status in ["End", "ActiveWithRanking"]:
+            average_rating = ItemRating.objects.filter(item=obj).aggregate(Avg('rating_value'))['rating_value__avg']
+            return average_rating if average_rating is not None else 0.0
+        return None
+    
+    def get_vote_count(self, obj):
+        event = obj.event
+        if event.status in ["End", "ActiveWithRanking"]:
+            ratings = ItemRating.objects.filter(item=obj)
+            vote_count = ratings.count()
+            return vote_count
+        return None
+
+class ItemRatingDetailSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField()
+    item = serializers.StringRelatedField()
+    rating_value = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ItemRating
+        fields = ['user', 'item', 'rating_value', 'comment']
+
+    def get_rating_value(self, obj):
+        event = obj.item.event
+        if event.status in ["End", "ActiveWithRanking"]:
+            return obj.rating_value
+        return None

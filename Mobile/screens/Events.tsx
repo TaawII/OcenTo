@@ -45,10 +45,6 @@ export default function EventList() {
     }, [])
   );
 
-  const logout = async () => {
-    if (await onLogout!) navigation.navigate("SignIn");
-  };
-
   const getFilteredEvents = () => {
     let filtered = events;
     if (selectedFilter === 'Publiczne') {
@@ -98,9 +94,18 @@ export default function EventList() {
     setItemJoin(null);
   };
 
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text style={styles.loadingText}>Ładowanie...</Text>
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
-      {!loading && events.length > 0 && (
       <View style={styles.filterRow}>
         <View style={styles.filterGroup}>
           <Text style={styles.filterLabel}>Dostępność</Text>
@@ -116,103 +121,93 @@ export default function EventList() {
           </TouchableOpacity>
         </View>
       </View>
-      )}
 
       <ScrollView>
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#0066cc" />
-            <Text style={styles.loadingText}>Ładowanie wydarzeń...</Text>
-          </View>
-        ) : (
-          <>
-            <Modal visible={modalVisible} animationType="slide" transparent={true} onRequestClose={() => setModalVisible(false)}>
-              <View style={styles.modalOverlay}>
-                <View style={styles.modalContent}>
-                  <Text style={styles.modalTitle}>{isCategoryModal ? 'Kategoria' : 'Dostępność'}</Text>
-                  <FlatList
-                    data={isCategoryModal ? categoryList : ['Wszystkie', 'Publiczne', 'Prywatne']}
-                    renderItem={({ item }) => (
-                      <TouchableOpacity
-                        style={styles.modalItem}
-                        onPress={() => {
-                          if (isCategoryModal) {
-                            setSelectedCategory(item);
-                          } else {
-                            setSelectedFilter(item as 'Wszystkie' | 'Publiczne' | 'Prywatne');
-                          }
-                          setModalVisible(false);
-                        }}
-                      >
-                        <Text style={styles.modalItemText}>{item}</Text>
-                      </TouchableOpacity>
-                    )}
-                    keyExtractor={(item, index) => item + index}
-                  />
-                  <TouchableOpacity style={styles.modalCloseButton} onPress={() => setModalVisible(false)}>
-                    <Text style={styles.modalCloseButtonText}>Zamknij</Text>
+        <Modal visible={modalVisible} animationType="slide" transparent={true} onRequestClose={() => setModalVisible(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>{isCategoryModal ? 'Kategoria' : 'Dostępność'}</Text>
+              <FlatList
+                data={isCategoryModal ? categoryList : ['Wszystkie', 'Publiczne', 'Prywatne']}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.modalItem}
+                    onPress={() => {
+                      if (isCategoryModal) {
+                        setSelectedCategory(item);
+                      } else {
+                        setSelectedFilter(item as 'Wszystkie' | 'Publiczne' | 'Prywatne');
+                      }
+                      setModalVisible(false);
+                    }}
+                  >
+                    <Text style={styles.modalItemText}>{item}</Text>
                   </TouchableOpacity>
-                </View>
-              </View>
-            </Modal>
+                )}
+                keyExtractor={(item, index) => item + index}
+              />
+              <TouchableOpacity style={styles.modalCloseButton} onPress={() => setModalVisible(false)}>
+                <Text style={styles.modalCloseButtonText}>Zamknij</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
 
-            <Modal visible={showPasswordModal} transparent={true} onRequestClose={resetModal}>
-              <View style={styles.passwordModalOverlay}>
-                <View style={styles.passwordModalContainer}>
-                  {itemJoin && (
+        <Modal visible={showPasswordModal} transparent={true} onRequestClose={resetModal}>
+          <View style={styles.passwordModalOverlay}>
+            <View style={styles.passwordModalContainer}>
+              {itemJoin && (
+                <>
+                  <Text style={styles.modalHeaderBold}>
+                    Czy chcesz dołączyć do: {itemJoin.title}?
+                  </Text>
+
+                  {itemJoin.is_private && (
                     <>
-                      <Text style={styles.modalHeaderBold}>
-                        Czy chcesz dołączyć do: {itemJoin.title}?
-                      </Text>
-
-                      {itemJoin.is_private && (
-                        <>
-                          <TextInput
-                            style={styles.inputModal}
-                            secureTextEntry
-                            value={password}
-                            onChangeText={setPassword}
-                            placeholder="Hasło"
-                          />
-                          {passwordError ? <Text style={styles.errorModalText}>{passwordError}</Text> : null}
-                        </>
-                      )}
+                      <TextInput
+                        style={styles.inputModal}
+                        secureTextEntry
+                        value={password}
+                        onChangeText={setPassword}
+                        placeholder="Hasło"
+                      />
+                      {passwordError ? <Text style={styles.errorModalText}>{passwordError}</Text> : null}
                     </>
                   )}
-                  <View style={styles.buttonModalContainer}>
-                    <TouchableOpacity style={styles.closeModalButton} onPress={resetModal}>
-                      <Text style={styles.closeModalButtonText}>Anuluj</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.closeModalButton} onPress={checkJoinEvent}>
-                      <Text style={styles.closeModalButtonText}>Dołącz</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
+                </>
+              )}
+              <View style={styles.buttonModalContainer}>
+                <TouchableOpacity style={styles.closeModalButton} onPress={resetModal}>
+                  <Text style={styles.closeModalButtonText}>Anuluj</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.closeModalButton} onPress={checkJoinEvent}>
+                  <Text style={styles.closeModalButtonText}>Dołącz</Text>
+                </TouchableOpacity>
               </View>
-            </Modal>
+            </View>
+          </View>
+        </Modal>
 
-            <Text style={styles.header}>Lista wydarzeń</Text>
-            {filteredEvents.map((item) => (
-              <TouchableOpacity key={item.id} onPress={() => checkPermissions(item)}>
-                <View style={styles.eventCard}>
-                  {item.is_private && (
-                    <View style={styles.lockContainer}>
-                      <Text style={styles.lockIcon}>🔒</Text>
-                    </View>
-                  )}
-                  <Image source={{ uri: item.image }} style={styles.eventImage} />
-                  <View style={styles.eventDetails}>
-                    <Text style={styles.eventTitle}>{item.title}</Text>
-                    <Text style={styles.eventDate}>Rozpoczęcie: {item.start_time}</Text>
-                    <Text style={styles.eventDate}>Zakończenie: {item.end_time}</Text>
-                    <Text style={styles.eventDescription}>Zarządca: {item.owner}</Text>
-                    <Text style={styles.peopleCount}>Ilość uczestników: {item.member_count}</Text>
-                  </View>
+        <Text style={styles.header}>Lista wydarzeń</Text>
+        {filteredEvents.map((item) => (
+          <TouchableOpacity key={item.id} onPress={() => checkPermissions(item)}>
+            <View style={styles.eventCard}>
+              {item.is_private && (
+                <View style={styles.lockContainer}>
+                  <Text style={styles.lockIcon}>🔒</Text>
                 </View>
-              </TouchableOpacity>
-            ))}
-          </>
-        )}
+              )}
+              <Image source={{ uri: item.image }} style={styles.eventImage} />
+              <View style={styles.eventDetails}>
+                <Text style={styles.eventTitle}>{item.title}</Text>
+                <Text style={styles.eventDate}>Rozpoczęcie: {item.start_time}</Text>
+                <Text style={styles.eventDate}>Zakończenie: {item.end_time}</Text>
+                <Text style={styles.eventDescription}>Zarządca: {item.owner}</Text>
+                <Text style={styles.peopleCount}>Ilość uczestników: {item.member_count}</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        ))}
       </ScrollView>
     </SafeAreaView>
   );

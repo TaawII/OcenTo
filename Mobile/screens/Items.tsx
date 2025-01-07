@@ -2,17 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, Alert, Modal, FlatList, ActivityIndicator } from 'react-native';
 import { getItems } from '../api/events';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '../context/AuthContext';
-import { useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
+import { useRoute, RouteProp, useFocusEffect, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from "../App";
+import { StackNavigationProp } from "@react-navigation/stack";
 import { Rating } from 'react-native-ratings';
 
 type ItemsScreenRouteProp = RouteProp<RootStackParamList, 'Items'>;
+type NavigationProp = StackNavigationProp<RootStackParamList, "ItemDetails">;
 
 export default function EventList() {
+  const navigation = useNavigation<NavigationProp>();
   const route = useRoute<ItemsScreenRouteProp>();
   const { eventId } = route.params;
-  const { onLogout } = useAuth();
   const [itemsList, setItems] = useState<any>();
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
@@ -36,13 +37,6 @@ export default function EventList() {
       load();
     }, [eventId])
   );
-
-  const logout = async () => {
-    const result = await onLogout!();
-    if (result && result.error) {
-      Alert.alert("Błąd", result.msg);
-    }
-  };
 
   const sortItems = (order: 'asc' | 'desc', by: 'name' | 'rating') => {
     const sortedItems = [...itemsList.items].sort((a, b) => {
@@ -68,6 +62,22 @@ export default function EventList() {
   const toggleModal = () => {
     setModalVisible(!modalVisible);
   };
+
+  const goToItemDetails = (itemId: number) => {
+    navigation.navigate('ItemDetails', { itemId });
+  };
+
+
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text style={styles.loadingText}>Ładowanie...</Text>
+      </View>
+    );
+  }
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -114,18 +124,14 @@ export default function EventList() {
         {!loading && itemsList && itemsList.title && (
           <Text style={styles.header}>{itemsList.title}</Text>
         )}
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#0066cc" />
-            <Text style={styles.loadingText}>Ładowanie...</Text>
-          </View>
-        ) : itemsList.items.length === 0 ? (
+        {itemsList.items.length === 0 ? (
           <Text style={styles.noDataText}>To wydarzenie wydaje się być puste :o</Text>
         ) : (
           itemsList.items.map((item: any) => {
             return (
               <TouchableOpacity
                 key={item.id}
+                onPress={() => goToItemDetails(item.id)}
               >
                 <View key={item.id} style={styles.eventCard}>
                   <Image source={{ uri: item.image }} style={styles.eventImage} />
@@ -139,8 +145,8 @@ export default function EventList() {
                         </Text>
                       );
                     })}
-                    {itemsList.status === "END" ? (
-                      <Text style={styles.eventDate}>Średnia ocena: {item.average_rating}</Text>
+                    {itemsList.status === "End" || itemsList.status === "ActiveWithRanking" ? (
+                      <Text style={styles.eventDate}>Średnia ocena: {item.average_rating || 0}</Text>
                       // <Rating
                       //   ratingCount={5}
                       //   imageSize={32}
