@@ -5,29 +5,39 @@ import SignUpForm from "./screens/auth/SignUpForm";
 import SignInForm from "./screens/auth/SignInForm";
 import Events from "./screens/Events";
 import QRScanner from "./screens/QRScanner";
+import Items from "./screens/Items";
+import ItemDetails from "./screens/ItemDetails";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, View, Alert, TouchableOpacity, Text, StyleSheet } from "react-native";
 
 export type RootStackParamList = {
   SignUp: undefined;
   SignIn: undefined;
   Events: undefined;
   QRScanner: undefined;
+  Items: { eventId: number };
+  ItemDetails: { itemId: number };
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
 
-// Dodaj osobną funkcję do zarządzania nawigacją
 const AppNavigator: React.FC = () => {
-  const { authState } = useAuth();
-
+  const { authState, onLogout } = useAuth();
   if (authState?.authenticated === null) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color="#0000ff" />
+        <Text style={styles.loadingText}>Ładowanie aplikacji...</Text>
       </View>
     );
   }
+
+  const logout = async () => {
+    const result = await onLogout!();
+    if (result && result.error) {
+      Alert.alert("Błąd", result.msg);
+    }
+  };
 
   return (
     <Stack.Navigator>
@@ -37,9 +47,42 @@ const AppNavigator: React.FC = () => {
             name="Events"
             component={Events}
             options={{
-              headerShown: false,
-              title: "Events",
+              headerShown: true,
               headerLeft: () => null,
+              headerTitleAlign: 'center',
+              title: "OcenTo",
+              headerRight: () => (
+                <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+                  <Text style={styles.logoutButtonText}>Wyloguj</Text>
+                </TouchableOpacity>
+              ),
+            }}
+          />
+          <Stack.Screen
+            name="Items"
+            component={Items}
+            options={{
+              headerShown: true,
+              headerTitle: () => null,
+              title: "Items",
+              headerRight: () => (
+                <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+                  <Text style={styles.logoutButtonText}>Wyloguj</Text>
+                </TouchableOpacity>
+              ),
+            }}
+          />
+          <Stack.Screen
+            name="ItemDetails"
+            component={ItemDetails}
+            options={{
+              headerShown: true,
+              headerTitle: () => null,
+              headerRight: () => (
+                <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+                  <Text style={styles.logoutButtonText}>Wyloguj</Text>
+                </TouchableOpacity>
+              ),
             }}
           />
           <Stack.Screen
@@ -87,5 +130,31 @@ const App: React.FC = () => {
     </AuthProvider>
   );
 };
+
+const styles = StyleSheet.create({
+  logoutButton: {
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    backgroundColor: '#FF6347',
+    borderRadius: 20,
+    marginRight: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  logoutButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#0066cc',
+    marginTop: 10,
+  },
+});
 
 export default App;

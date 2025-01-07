@@ -6,7 +6,7 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../../App";
 import { useAuth } from "../../context/AuthContext";
 
-type SignUpScreenNavigationProp = StackNavigationProp<RootStackParamList, "SignUp">;
+type NavigationProp = StackNavigationProp<RootStackParamList, "SignUp">;
 
 const DismissKeyboard: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -15,7 +15,7 @@ const DismissKeyboard: React.FC<{ children: React.ReactNode }> = ({ children }) 
 );
 
 const SignUpForm: React.FC = () => {
-  const navigation = useNavigation<SignUpScreenNavigationProp>();
+  const navigation = useNavigation<NavigationProp>();
 
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");

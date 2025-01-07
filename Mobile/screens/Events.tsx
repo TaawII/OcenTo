@@ -1,126 +1,212 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, Alert, Modal, FlatList } from 'react-native';
-import { getEvents } from '../api/events';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, Alert, Modal, FlatList, TextInput, ActivityIndicator } from 'react-native';
+import { getEvents, isPermissionToShowItems, joinEvent } from '../api/events';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { RootStackParamList } from "../App";
+
+type NavigationProp = StackNavigationProp<RootStackParamList, "Items">;
 
 export default function EventList() {
+  const navigation = useNavigation<NavigationProp>();
   const { onLogout } = useAuth();
+
   const [events, setEvents] = useState<any[]>([]);
   const [categoryList, setCategoryList] = useState<any[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<'Wszystkie' | 'Publiczne' | 'Prywatne'>('Wszystkie');
   const [selectedCategory, setSelectedCategory] = useState<string>('Wszystkie');
   const [modalVisible, setModalVisible] = useState(false);
   const [isCategoryModal, setIsCategoryModal] = useState(false);
+  const [password, setPassword] = useState('');
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [itemJoin, setItemJoin] = useState<any>(null);
+  const [passwordError, setPasswordError] = useState('');
+  const [loading, setLoading] = useState(true); // Stan ładowania
 
-  useEffect(() => {
-    const load = async () => {
-      const result = await getEvents();
-      setEvents(result);
-      const category = ['Wszystkie', ...new Set(result.flatMap(event => event.categories))];
-      setCategoryList(category);
-    };
-    load();
-  }, []);
-
-  const logout = async () => {
-    const result = await onLogout!();
-    if (result && result.error) {
-      Alert.alert("Błąd", result.msg);
-    }
-  };
+  useFocusEffect(
+    React.useCallback(() => {
+      const load = async () => {
+        setLoading(true); // Rozpocznij ładowanie
+        try {
+          const result = await getEvents();
+          setEvents(result);
+          const category = ['Wszystkie', ...new Set(result.flatMap(event => event.categories))];
+          setCategoryList(category);
+        } catch (error) {
+          console.error('Błąd ładowania danych:', error);
+          Alert.alert('Błąd', 'Wystąpił błąd podczas ładowania danych.');
+        } finally {
+          setLoading(false); // Zakończ ładowanie
+        }
+      };
+      load();
+    }, [])
+  );
 
   const getFilteredEvents = () => {
     let filtered = events;
-
     if (selectedFilter === 'Publiczne') {
       filtered = filtered.filter(event => !event.is_private);
     } else if (selectedFilter === 'Prywatne') {
       filtered = filtered.filter(event => event.is_private);
     }
-
     if (selectedCategory !== 'Wszystkie') {
       filtered = filtered.filter(event => event.categories.includes(selectedCategory));
     }
-
     return filtered;
   };
 
   const filteredEvents = getFilteredEvents();
 
+  const checkPermissions = async (item: any) => {
+    const isPermissions = await isPermissionToShowItems(item.id);
+    if (isPermissions === true) {
+      navigation.navigate("Items", { eventId: item.id });
+    } else if (isPermissions === false) {
+      resetModal();
+      setItemJoin(item);
+      setShowPasswordModal(true);
+    } else {
+      Alert.alert('Błąd', 'Wystąpił nieznany problem, spróbuj ponownie za chwile.');
+    }
+  };
+
+  const checkJoinEvent = async () => {
+    if (itemJoin.is_private && !password) {
+      setPasswordError('Hasło jest wymagane');
+    } else {
+      const isJoin = await joinEvent(itemJoin.id, password);
+      if (isJoin.success === true) {
+        navigation.navigate("Items", { eventId: itemJoin.id });
+        resetModal();
+      } else {
+        setPasswordError(isJoin.message);
+      }
+    }
+  };
+
+  const resetModal = () => {
+    setPasswordError('');
+    setShowPasswordModal(false);
+    setPassword('');
+    setItemJoin(null);
+  };
+
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text style={styles.loadingText}>Ładowanie...</Text>
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
-              <View style={styles.filterRow}>
-          {/* Filtry: Dostępność */}
-          <View style={styles.filterGroup}>
-            <Text style={styles.filterLabel}>Dostępność</Text>
-            <TouchableOpacity style={styles.filterButton} onPress={() => { setIsCategoryModal(false); setModalVisible(true); }}>
-              <Text style={styles.filterText}>{selectedFilter}</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Filtry: Kategorie */}
-          <View style={styles.filterGroup}>
-            <Text style={styles.filterLabel}>Kategoria</Text>
-            <TouchableOpacity style={styles.filterButton} onPress={() => { setIsCategoryModal(true); setModalVisible(true); }}>
-              <Text style={styles.filterText}>{selectedCategory}</Text>
-            </TouchableOpacity>
-          </View>
+      <View style={styles.filterRow}>
+        <View style={styles.filterGroup}>
+          <Text style={styles.filterLabel}>Dostępność</Text>
+          <TouchableOpacity style={styles.filterButton} onPress={() => { setIsCategoryModal(false); setModalVisible(true); }}>
+            <Text style={styles.filterText}>{selectedFilter}</Text>
+          </TouchableOpacity>
         </View>
+
+        <View style={styles.filterGroup}>
+          <Text style={styles.filterLabel}>Kategoria</Text>
+          <TouchableOpacity style={styles.filterButton} onPress={() => { setIsCategoryModal(true); setModalVisible(true); }}>
+            <Text style={styles.filterText}>{selectedCategory}</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
       <ScrollView>
-
-
-        {/* Modal */}
-        <Modal
-          visible={modalVisible}
-          animationType="slide"
-          onRequestClose={() => setModalVisible(false)}
-        >
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalHeader}>{isCategoryModal ? 'Kategorie' : 'Dostępność'}</Text>
-            <FlatList
-              data={isCategoryModal ? categoryList : ['Wszystkie', 'Publiczne', 'Prywatne']}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.modalItem}
-                  onPress={() => {
-                    if (isCategoryModal) {
-                      setSelectedCategory(item);
-                    } else {
-                      setSelectedFilter(item as 'Wszystkie' | 'Publiczne' | 'Prywatne');
-                    }
-                    setModalVisible(false);
-                  }}
-                >
-                  <Text style={styles.modalItemText}>{item}</Text>
-                </TouchableOpacity>
-              )}
-              keyExtractor={(item, index) => item + index}
-            />
-            <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
-              <Text style={styles.closeButtonText}>Zamknij</Text>
-            </TouchableOpacity>
+        <Modal visible={modalVisible} animationType="slide" transparent={true} onRequestClose={() => setModalVisible(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>{isCategoryModal ? 'Kategoria' : 'Dostępność'}</Text>
+              <FlatList
+                data={isCategoryModal ? categoryList : ['Wszystkie', 'Publiczne', 'Prywatne']}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.modalItem}
+                    onPress={() => {
+                      if (isCategoryModal) {
+                        setSelectedCategory(item);
+                      } else {
+                        setSelectedFilter(item as 'Wszystkie' | 'Publiczne' | 'Prywatne');
+                      }
+                      setModalVisible(false);
+                    }}
+                  >
+                    <Text style={styles.modalItemText}>{item}</Text>
+                  </TouchableOpacity>
+                )}
+                keyExtractor={(item, index) => item + index}
+              />
+              <TouchableOpacity style={styles.modalCloseButton} onPress={() => setModalVisible(false)}>
+                <Text style={styles.modalCloseButtonText}>Zamknij</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </Modal>
 
-        {/* Lista wydarzeń */}
-        <Text style={styles.header}>Lista wydarzeń</Text>
-        {filteredEvents.map((item) => (
-          <View key={item.id} style={styles.eventCard}>
-            {item.is_private && (
-              <View style={styles.lockContainer}>
-                <Text style={styles.lockIcon}>🔒</Text>
+        <Modal visible={showPasswordModal} transparent={true} onRequestClose={resetModal}>
+          <View style={styles.passwordModalOverlay}>
+            <View style={styles.passwordModalContainer}>
+              {itemJoin && (
+                <>
+                  <Text style={styles.modalHeaderBold}>
+                    Czy chcesz dołączyć do: {itemJoin.title}?
+                  </Text>
+
+                  {itemJoin.is_private && (
+                    <>
+                      <TextInput
+                        style={styles.inputModal}
+                        secureTextEntry
+                        value={password}
+                        onChangeText={setPassword}
+                        placeholder="Hasło"
+                      />
+                      {passwordError ? <Text style={styles.errorModalText}>{passwordError}</Text> : null}
+                    </>
+                  )}
+                </>
+              )}
+              <View style={styles.buttonModalContainer}>
+                <TouchableOpacity style={styles.closeModalButton} onPress={resetModal}>
+                  <Text style={styles.closeModalButtonText}>Anuluj</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.closeModalButton} onPress={checkJoinEvent}>
+                  <Text style={styles.closeModalButtonText}>Dołącz</Text>
+                </TouchableOpacity>
               </View>
-            )}
-            <Image source={{ uri: item.image }} style={styles.eventImage} />
-            <View style={styles.eventDetails}>
-              <Text style={styles.eventTitle}>{item.title}</Text>
-              <Text style={styles.eventDate}>Rozpoczęcie: {item.start_time}</Text>
-              <Text style={styles.eventDate}>Zakończenie: {item.end_time}</Text>
-              <Text style={styles.eventDescription}>Zarządca: {item.owner}</Text>
-              <Text style={styles.peopleCount}>Ilość uczestników: {item.member_count}</Text>
             </View>
           </View>
+        </Modal>
+
+        <Text style={styles.header}>Lista wydarzeń</Text>
+        {filteredEvents.map((item) => (
+          <TouchableOpacity key={item.id} onPress={() => checkPermissions(item)}>
+            <View style={styles.eventCard}>
+              {item.is_private && (
+                <View style={styles.lockContainer}>
+                  <Text style={styles.lockIcon}>🔒</Text>
+                </View>
+              )}
+              <Image source={{ uri: item.image }} style={styles.eventImage} />
+              <View style={styles.eventDetails}>
+                <Text style={styles.eventTitle}>{item.title}</Text>
+                <Text style={styles.eventDate}>Rozpoczęcie: {item.start_time}</Text>
+                <Text style={styles.eventDate}>Zakończenie: {item.end_time}</Text>
+                <Text style={styles.eventDescription}>Zarządca: {item.owner}</Text>
+                <Text style={styles.peopleCount}>Ilość uczestników: {item.member_count}</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
         ))}
       </ScrollView>
     </SafeAreaView>
@@ -131,7 +217,85 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingTop: 10,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 50,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#0066cc',
+    marginTop: 10,
+  },
+  passwordModalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  passwordModalContainer: {
+    width: '80%',
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  inputModal: {
+    width: '100%',
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  errorModalText: {
+    color: 'red',
+    fontSize: 14,
+    marginTop: 5,
+  },
+  modalHeaderBold: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  buttonModalContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 20,
+  },
+  closeModalButton: {
+    padding: 10,
+    backgroundColor: '#0066cc',
+    borderRadius: 8,
+    width: '48%',
+    alignItems: 'center',
+  },
+  closeModalButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  logoutContainer: {
+    position: 'absolute',
+    bottom: 20,
+    width: '100%',
+    alignItems: 'center',
+  },
+  logoutButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: '#cc0000',
+    borderRadius: 30,
+  },
+  logoutButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   filterRow: {
     flexDirection: 'row',
@@ -151,10 +315,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 5,
   },
-  filterContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
   filterButton: {
     width: '100%',
     paddingVertical: 10,
@@ -167,15 +327,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  modalContainer: {
+  modalOverlay: {
     flex: 1,
-    backgroundColor: '#fff',
-    padding: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  modalHeader: {
-    fontSize: 20,
+  modalContent: {
+    width: 300,
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+  },
+  modalTitle: {
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginBottom: 10,
     textAlign: 'center',
   },
   modalItem: {
@@ -187,14 +354,15 @@ const styles = StyleSheet.create({
   modalItemText: {
     fontSize: 18,
     color: '#333',
+    textAlign: 'center', //wyśrodkowanie elementów w modalu
   },
-  closeButton: {
+  modalCloseButton: {
     marginTop: 20,
     padding: 10,
     backgroundColor: '#0066cc',
     borderRadius: 8,
   },
-  closeButtonText: {
+  modalCloseButtonText: {
     color: '#fff',
     fontSize: 16,
     textAlign: 'center',
