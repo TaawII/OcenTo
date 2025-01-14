@@ -25,16 +25,42 @@ export const AuthProvider = ({ children }: any) => {
         authenticated: null
     });
 
+    const verifyToken = async (token: string) => {
+        try {
+            const response = await axios.get(`${API_URL}/token/verify`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (response.status === 200 && response.data.success === true) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        } catch (error) {
+            return false;
+        }
+    };
+
     useEffect(() => {
         const loadToken = async () => {
             const token = await SecureStore.getItemAsync(TOKEN_KEY);
 
             if (token) {
-                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-                setAuthState({
-                    token: token,
-                    authenticated: true
-                });
+                const isValid = await verifyToken(token);
+                if (isValid) {
+                    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                    setAuthState({
+                        token: token,
+                        authenticated: true
+                    });
+                } else {
+                    await SecureStore.deleteItemAsync(TOKEN_KEY);
+                    axios.defaults.headers.common['Authorization'] = null;
+                    setAuthState({
+                        token: null,
+                        authenticated: false
+                    });
+                }
             } else {
                 axios.defaults.headers.common['Authorization'] = null;
                 setAuthState({
@@ -55,7 +81,7 @@ export const AuthProvider = ({ children }: any) => {
                     timeout: 8000,
                 }
             );
-            return {error: false}
+            return { error: false }
         } catch (e: any) {
             const errorMsg = (e as any).response?.data?.error || 'Wystąpił nieoczekiwany błąd.\nSpróbuj ponownie za chwilę.';
             return { error: true, msg: errorMsg };
@@ -79,7 +105,7 @@ export const AuthProvider = ({ children }: any) => {
 
             await SecureStore.setItemAsync(TOKEN_KEY, result.data.token);
 
-            return {error: false};
+            return { error: false };
         } catch (e: any) {
             const errorMsg = (e as any).response?.data?.error || 'Wystąpił nieoczekiwany błąd.\nSpróbuj ponownie za chwilę.';
             return { error: true, msg: errorMsg };
@@ -94,6 +120,7 @@ export const AuthProvider = ({ children }: any) => {
             token: null,
             authenticated: false
         });
+        return true
     }
 
     const value = {

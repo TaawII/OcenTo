@@ -12,6 +12,7 @@ const indexRouter = require('./routes/index');
 const registerRouter = require('./routes/register');
 const loginRouter = require('./routes/login');
 const panelRouter = require('./routes/panel');
+const eventsRouter = require('./routes/events');
 
 var app = express();
 
@@ -48,7 +49,6 @@ app.use('/', indexRouter);
 app.use('/register', registerRouter);
 app.use('/login', loginRouter);
 app.use('/panel', panelRouter);
-
 
 
 //debugowanie
