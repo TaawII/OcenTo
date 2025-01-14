@@ -6,35 +6,37 @@ exports.renderCreateEvent = (req, res) => {
   res.render('events/create', { error: null });
 };
 exports.submitEvent = async (req, res) => {
-  let imagePath = '';
   try {
-    if (!req.file) {
-      return res.status(400).send('Nie przesłano pliku obrazka');
-    }
- 
-    const formData = new FormData();
-    const fields = req.body;
- 
-    // Dodanie danych do formData
-    formData.append('title', fields.title || "Testowy tytuł");
-    formData.append('item_properties', fields.item_properties || '[]');
-    formData.append('default_values', fields.default_values || '[]');
-    formData.append('status', fields.status || 'Active');
-    formData.append('start_time', fields.start_time || '2021-06-01T12:00:00Z');
-    formData.append('end_time', fields.end_time || '2021-06-01T12:00:00Z');
-    //formData.append('is_private', fields.is_private === 'on' ? 'true' : 'false');  // Zmiana na 'true'/'false'
-    formData.append('password', fields.password || '');  // Ustawienie pustego stringu jeśli brak
-    formData.append('categories', fields.categories || '[]');
- 
-    // Pobieramy ścieżkę do pliku obrazu
-    imagePath = req.file.path;
- 
-    // Odczyt pliku i konwersja do Base64
-    const imageData = fs.readFileSync(imagePath);
-    const base64Image = imageData.toString('base64');
- 
-    // Dodanie obrazu w formacie Base64 do formData
-    formData.append('image', base64Image);
+    let imageBase64 = req.file? req.file.buffer.toString('base64'):null;
+    const isPrivate = req.body.is_private === 'on' ? true : false; // Sprawdzamy, czy checkbox jest zaznaczony
+
+  //Sprawdzenie, czy dane item_properties i default_values są w formie tablicy
+  let { item_properties, default_values, categories } = req.body;
+
+  //Jeśli są pojedynczymi wartościami, przekonwertuj je na tablice
+  if (typeof item_properties === 'string') {
+    item_properties = [item_properties];
+  }
+  if (typeof default_values === 'string') {
+    default_values = [default_values];
+  }
+  if (typeof categories === 'string') {
+    categories = [categories];
+  }
+    const formData = {
+      title: req.body.title,
+      item_properties: item_properties || [], 
+      default_values: default_values || [],   
+      status: req.body.status,
+      start_time: req.body.start_time,
+      end_time: req.body.end_time,
+      is_private: isPrivate, //poprawka
+      password: req.body.password || null,
+      categories: categories || [],
+      image: imageBase64
+    };
+    console.log(formData);
+
     const token = req.cookies.auth_token;
     console.log(token);
     // Przesyłanie danych do Django
@@ -48,15 +50,6 @@ exports.submitEvent = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).send('Błąd podczas przesyłania Eventu');
-  } finally {
-    // Usunięcie pliku po przesłaniu, nawet w przypadku błędu
-    if (imagePath) {
-      try {
-        fs.unlinkSync(imagePath);
-      } catch (unlinkError) {
-        console.error('Błąd podczas usuwania pliku:', unlinkError);
-      }
-    }
-  }
+  } 
 }
  

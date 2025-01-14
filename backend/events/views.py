@@ -79,7 +79,6 @@ class OwnerEventsListView(APIView):
 
 class CreateEventView(APIView):
     permission_classes = [IsAuthenticated]
-    parser_classes = (MultiPartParser, FormParser)
 
     def post(self, request, *args, **kwargs):
         data = request.data
@@ -87,18 +86,19 @@ class CreateEventView(APIView):
         try:
             # Pobieranie użytkownika na podstawie przekazanego ID
             owner = User.objects.get(id=id)
-
+            image_binary = ''
             # Sprawdzanie, czy obraz jest przesyłany w formacie Base64
             image_data = data.get('image', None)
             if image_data:
                 try:
-                    # Dekodowanie Base64 do danych binarnych
-                    image_binary = base64.b64decode(image_data)
+                    if image_data.startswith("data:image/jpeg;base64,"):
+                        # Usunięcie prefiksu
+                        image_data = image_data.split(",")[1]
+
+                        # Przekształcanie danych base64 na binarny format
+                    image_binary = base64.b64decode(image_data)  # Dekodowanie
                 except Exception as e:
                     return Response({'error': f'Błąd przy dekodowaniu obrazu: {str(e)}'}, status=400)
-            else:
-                image_binary = None
-
             # Tworzenie nowego wydarzenia
             event = Event.objects.create(
                 title=data.get('title'),

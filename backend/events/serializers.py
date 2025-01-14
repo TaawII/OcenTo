@@ -92,17 +92,6 @@ class EventSerializer(serializers.ModelSerializer):
             'start_time', 'end_time', 'password', 'categories', 'image'
         ]
 
-    # Dodajemy pole dla obrazu, które będzie traktować dane jako Base64
-    def validate_image(self, value):
-        if value:
-            # Sprawdzamy, czy dane są w formacie Base64
-            try:
-                # Jeżeli jest to Base64, dekodujemy do binarnego formatu
-                decoded_image = base64.b64decode(value)
-                return decoded_image
-            except Exception as e:
-                raise serializers.ValidationError("Niepoprawny format obrazu.")
-        return value
 class MobileItemEventSerializer(serializers.ModelSerializer):
     average_rating = serializers.SerializerMethodField()
 

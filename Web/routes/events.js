@@ -5,6 +5,6 @@ const multer = require('multer');
 
 const upload = multer({dest: 'routes/'});
 router.get('/create', eventController.renderCreateEvent);
-router.post('/create',upload.single('image'), eventController.submitEvent);
+router.post('/create', eventController.submitEvent);
 
 module.exports = router;
