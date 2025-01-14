@@ -1,7 +1,8 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
 
-from .views import RegisterView, LoginView, MobileEventListView, OwnerEventsListView, CreateEventView
+#from .views import RegisterView, LoginView, MobileEventListView, OwnerEventsListView, CreateEventView, GetEventByIdView, EditEventView
+from .views import RegisterView, LoginView, MobileEventListView, OwnerEventsListView, CreateEventView, EventDetailView, EventEditView
 
 # Zapisujcie wszystkie url w całosci z małych liter: np. zamiast MobileEventsList używajcie mobileeventslist
 urlpatterns = [
@@ -11,4 +12,8 @@ urlpatterns = [
     path('mobileeventslist', MobileEventListView.as_view(), name='mobile-events-list'),
     path('ownereventslist', OwnerEventsListView.as_view(), name='owner-events-list'),
     path('create', CreateEventView.as_view(), name='create_event'),
+    # path('geteventbyid/<int:event_id>/', GetEventByIdView.as_view(), name='get-event-by-id'),
+    # path('editevent/<int:event_id>/', EditEventView.as_view(), name='edit-event'),
+    path('events/<int:pk>/', EventDetailView.as_view(), name='event-detail'),
+    path('events/<int:pk>/edit/', EventEditView.as_view(), name='event-edit'),
 ]

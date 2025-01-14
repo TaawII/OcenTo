@@ -1,0 +1,65 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+  padding: 20px;
+  background-color: #f9f9f9;
+  font-size: 18px; /* Zwiększona czcionka dla całego ciała strony */
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  width: 400px;
+}
+
+label {
+  margin-top: 10px;
+  font-weight: bold;
+  font-size: 18px; /* Zwiększona czcionka dla etykiet */
+}
+
+input, textarea, button {
+  margin-top: 5px;
+  padding: 10px; /* Zwiększenie paddingu wewnętrznego */
+  font-size: 18px; /* Zwiększona czcionka dla inputów, textarea i przycisków */
+}
+
+button {
+  margin-top: 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 12px; /* Zwiększenie paddingu przycisku */
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #45a049;
+}
+
+.error {
+  color: red;
+  font-weight: bold;
+  font-size: 18px; /* Zwiększenie czcionki błędu */
+}
+
+.field-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+input {
+  margin-top: 3px;
+  padding: 10px; /* Zwiększenie paddingu wewnętrznego dla inputów */
+  font-size: 18px; /* Zwiększenie czcionki dla inputów */
+}
+
+button.remove-field {
+  margin-left: 5px;
+  height: 40px; /* Zwiększenie wysokości przycisku usuwania */
+  align-self: center;
+  margin-top: 5px;
+  font-size: 18px; /* Zwiększenie czcionki dla przycisku usuwania */
+  padding: 5px 10px; /* Zwiększenie paddingu w przycisku */
+}
