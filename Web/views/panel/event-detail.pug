@@ -1,0 +1,48 @@
+doctype html
+html
+  head
+    title Event Details
+    link(rel="stylesheet", href="/stylesheets/panel/event-detail/style.css")
+  body
+    h1 Event Details
+    .event-details
+      // Wyświetlanie zdjęcia pod tytułem eventu
+      if event.image
+        img(src=`data:image/jpeg;base64,${event.image}`, alt="Event Image", width="300")
+      else
+        p No image available
+
+      ul.details-list
+        li
+          strong Title:
+          | #{event.title}
+        li
+          strong Start Time:
+          | #{event.start_time}
+        li
+          strong End Time:
+          | #{event.end_time}
+        li
+          strong Status:
+          | #{event.status}
+        li
+          strong Private:
+          | #{event.is_private ? 'Yes' : 'No'}
+        li
+          strong Categories:
+          | #{event.categories.join(', ')}
+
+      h2 Item Properties and Default Values
+      .properties-list
+        ul
+          each property, index in event.item_properties
+            li
+              strong Property:
+              | #{property}
+              br
+              strong Default Value:
+              | #{event.default_values[index]}
+
+      .links
+        a.btn-edit(href=`/panel/events/${event.id}/edit`) Edit Event
+        a.btn-back(href="/panel/events") Back to Events
