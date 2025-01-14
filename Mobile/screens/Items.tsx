@@ -134,7 +134,10 @@ export default function EventList() {
                 onPress={() => goToItemDetails(item.id)}
               >
                 <View key={item.id} style={styles.eventCard}>
-                  <Image source={{ uri: item.image }} style={styles.eventImage} />
+                  <Image
+                    source={{ uri: `data:image/png;base64,${item.image}` }}
+                    style={styles.eventImage}
+                  />
                   <View style={styles.eventDetails}>
                     <Text style={styles.eventTitle}>{item.nazwa}</Text>
                     {item.item_values.map((value: any, index: number) => {

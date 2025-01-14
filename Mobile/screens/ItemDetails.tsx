@@ -89,7 +89,7 @@ const ItemDetailScreen = () => {
 
                 <Image
                     style={styles.image}
-                    source={{ uri: itemData[0].image || 'https://via.placeholder.com/300' }}
+                    source={{ uri: `data:image/png;base64,${itemData[0].image}` || 'https://via.placeholder.com/300' }}
                 />
                 <Text style={styles.label}>Attributes:</Text>
                 {itemData[0].item_values.map((value: any, index: any) => (

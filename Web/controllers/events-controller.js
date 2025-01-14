@@ -6,12 +6,12 @@ exports.getEvent = async (req, res) => {
   const authToken = req.cookies.auth_token;
 
   try {
-      const response = await axios.get(`http://${serverURL}/events/${id}/`, {
-          headers: { Authorization: `Bearer ${authToken}` },
-      });
+    const response = await axios.get(`http://${serverURL}/events/${id}/`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
 
-      
-      // Funkcja do formatowania daty
+
+    // Funkcja do formatowania daty
     const formatDate = (dateString) => {
       const date = new Date(dateString);
       if (isNaN(date)) {
@@ -29,25 +29,25 @@ exports.getEvent = async (req, res) => {
     };
 
 
-      // Jeśli zdjęcie istnieje, konwertujemy je na Base64
-      if (response.data.image) {
-          const base64Image = response.data.image.toString('base64');
-          response.data.image = base64Image;
-      }
+    // Jeśli zdjęcie istnieje, konwertujemy je na Base64
+    if (response.data.image) {
+      const base64Image = response.data.image.toString('base64');
+      response.data.image = base64Image;
+    }
 
     // Formatowanie daty
     response.data.start_time = formatDate(response.data.start_time);
     response.data.end_time = formatDate(response.data.end_time);
 
 
-      res.render('panel/event-detail', { event: response.data });
+    res.render('panel/event-detail', { event: response.data });
   } catch (error) {
-    console.error(error.response?.data); 
-    console.error(error.response?.status);    
-      if (error.response && error.response.status === 403) {
-          return res.status(403).send('You are not authorized to view this event.');
-      }
-      res.status(500).send('Error fetching event.');
+    console.error(error.response?.data);
+    console.error(error.response?.status);
+    if (error.response && error.response.status === 403) {
+      return res.status(403).send('You are not authorized to view this event.');
+    }
+    res.status(500).send('Error fetching event.');
   }
 };
 
@@ -144,3 +144,44 @@ exports.renderEditForm = async (req, res) => {
     return res.status(500).send('Error fetching event for edit form.');
   }
 };
+
+exports.renderCreateEvent = (req, res) => {
+  res.render('events/create', { error: null });
+};
+
+exports.createEvent = async (req, res) => {
+  const formData = {
+    title: req.body.title,
+    item_properties: req.body.item_properties || [],
+    default_values: req.body.default_values || [],
+    status: req.body.status,
+    start_time: req.body.start_time,
+    end_time: req.body.end_time,
+    is_private: req.body.is_private === 'on',
+    password: req.body.password || null,
+    categories: req.body.categories || []
+  };
+
+  // Pobranie tokena z ciasteczek (czyli autoryzacja)
+  const token = req.cookies.auth_token; // Token przechowywany w ciasteczku 'auth_token'
+
+  if (!token) {
+    return res.render('events/create', { error: 'Nie znaleziono tokena autoryzacyjnego.' });
+  }
+
+  try {
+    // Wyślij dane do backendu Django
+    const response = await axios.post('http://127.0.0.1:8000/api/events/create', formData, {
+      headers: {
+        'Authorization': `Bearer ${token}`, // Użycie tokena z ciasteczek
+        'Content-Type': 'application/json'
+      }
+    });
+
+    // Jeśli udało się utworzyć event, przekieruj na stronę z potwierdzeniem
+    res.redirect('/events/create?success=true');
+  } catch (error) {
+    console.error(error);
+    res.render('events/create', { error: 'Wystąpił błąd podczas tworzenia wydarzenia.' });
+  }
+}

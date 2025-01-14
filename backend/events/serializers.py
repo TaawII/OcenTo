@@ -2,8 +2,7 @@ from django.contrib.auth.hashers import make_password, check_password
 from rest_framework import serializers
 from django.db.models import Avg
 from .models import User, Event, Item, EventMember, ItemRating
-import logging
-import json
+import logging, json, base64
 logger = logging.getLogger(__name__)
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -43,7 +42,7 @@ class MobileEventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = [
-            'id', 'title', 'owner', 'status', 'start_time', 'end_time', 'is_private', 'categories', 'member_count'
+            'id', 'title', 'owner', 'status', 'start_time', 'end_time', 'is_private', 'categories', 'member_count', 'image'
         ]
 
 class OwnerEventSerializer(serializers.ModelSerializer):
@@ -111,7 +110,6 @@ class EventEditSerializer(serializers.ModelSerializer):
             return value
         else:
             raise serializers.ValidationError("Default values must be a list.")
-        fields = '__all__'
 
 class MobileItemEventSerializer(serializers.ModelSerializer):
     average_rating = serializers.SerializerMethodField()

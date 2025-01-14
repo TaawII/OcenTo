@@ -49,6 +49,7 @@ app.use('/', indexRouter);
 app.use('/register', registerRouter);
 app.use('/login', loginRouter);
 app.use('/panel', panelRouter);
+app.use('/events', eventsRouter);
 
 
 //debugowanie

@@ -11,8 +11,6 @@ type NavigationProp = StackNavigationProp<RootStackParamList, "Items">;
 
 export default function EventList() {
   const navigation = useNavigation<NavigationProp>();
-  const { onLogout } = useAuth();
-
   const [events, setEvents] = useState<any[]>([]);
   const [categoryList, setCategoryList] = useState<any[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<'Wszystkie' | 'Publiczne' | 'Prywatne'>('Wszystkie');
@@ -197,7 +195,10 @@ export default function EventList() {
                   <Text style={styles.lockIcon}>🔒</Text>
                 </View>
               )}
-              <Image source={{ uri: item.image }} style={styles.eventImage} />
+              <Image 
+                source={{ uri: `data:image/png;base64,${item.image}` }} 
+                style={styles.eventImage} 
+              />
               <View style={styles.eventDetails}>
                 <Text style={styles.eventTitle}>{item.title}</Text>
                 <Text style={styles.eventDate}>Rozpoczęcie: {item.start_time}</Text>
