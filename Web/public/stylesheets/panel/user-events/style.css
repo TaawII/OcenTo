@@ -1,0 +1,80 @@
+/* Podstawowy styl dla tabeli */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+  
+  table th, table td {
+    padding: 10px;
+    text-align: left;
+    border: 1px solid #ddd;
+  }
+  
+  table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+  }
+  
+  table tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  table tr:hover {
+    background-color: #f1f1f1;
+  }
+  
+  /* Styl dla przycisków w kolumnie Akcje */
+  a.btn-details, a.btn-edit, a.btn-stats {
+    display: inline-block;
+    padding: 8px 15px;
+    margin-right: 10px;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 14px;
+  }
+  
+  a.btn-details {
+    background-color: #007bff;
+    color: white;
+  }
+  
+  a.btn-details:hover {
+    background-color: #0056b3;
+  }
+  
+  a.btn-edit {
+    background-color: #28a745;
+    color: white;
+  }
+  
+  a.btn-edit:hover {
+    background-color: #218838;
+  }
+
+  a.btn-stats {
+    background-color: #ffc107;
+    color: white;
+    }
+
+    a.btn-stats:hover {
+    background-color: #e0a800;
+    }
+
+  /* Dodatkowe style dla nagłówków */
+  .page-header h1 {
+    font-size: 28px;
+    margin-bottom: 20px;
+  }
+  
+  p {
+    font-size: 16px;
+    color: #666;
+  }
+  
+  /* Styl dla pustych wydarzeń */
+  p.no-events {
+    font-size: 18px;
+    color: #999;
+  }
+  

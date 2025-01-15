@@ -237,3 +237,14 @@ class ItemRatingAddOrModifyView(APIView):
             message = "Komentarz został zaktualizowany pomyślnie"
 
         return Response({"message": message}, status=status.HTTP_200_OK)
+    
+    
+
+class UserEventsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user  # Pobierz zalogowanego użytkownika
+        events = Event.objects.filter(owner=user)  # Wyszukaj wszystkie wydarzenia użytkownika
+        serializer = EventSerializer(events, many=True)
+        return Response(serializer.data)

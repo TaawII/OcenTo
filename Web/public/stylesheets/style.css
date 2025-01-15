@@ -1,7 +1,59 @@
+/* Navbar */
+.navbar {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  background-color: #ffffff;  /* Białe tło */
+  border-radius: 8px;         /* Zaokrąglone rogi */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);  /* Delikatny cień */
+  display: flex;              /* Używamy flexboxa do poziomego układu */
+  align-items: center;        /* Wyrównanie elementów w pionie */
+  justify-content: flex-start; /* Rozmieszczenie elementów z lewej strony */
+  padding: 10px 20px;         /* Dodanie przestrzeni wewnętrznej */
+}
+
+.navbar li {
+  margin: 0;
+}
+
+.navbar a {
+  display: block;
+  padding: 10px 20px;
+  color: #4a4a4a;  /* Ciemnoszary kolor tekstu */
+  text-decoration: none;
+  font-weight: bold;  /* Pogrubienie tekstu */
+  text-align: center;  /* Wyrównanie tekstu w środku */
+  border-radius: 6px;  /* Zaokrąglone rogi na każdym przycisku */
+  font-size: 16px;     /* Rozmiar czcionki */
+}
+
+.navbar a:hover {
+  background-color: #d3d3d3;  /* Jasnoszare tło przy najechaniu */
+  color: #333;                 /* Zmiana koloru tekstu */
+}
+
+.navbar .active a {
+  background-color: #5e72e4;  /* Kolor aktywnego linku */
+  color: white;                /* Kolor tekstu dla aktywnego linku */
+}
+
+/* Przyciski wylogowania */
+.navbar .logout {
+  margin-left: auto; /* Przesunięcie przycisku wylogowania na prawą stronę */
+}
+
+.navbar .icon {
+  width: 30px; /* Szerokość ikon */
+  height: 30px; /* Wysokość ikon */
+  margin-right: 10px; /* Przestrzeń po prawej stronie ikony */
+}
+
+
+
 body {
   font-family: Arial, sans-serif;
-  margin: 20px;
-  padding: 20px;
+  margin: 0px;
+  padding: 0px;
   background-color: #f9f9f9;
 }
 
