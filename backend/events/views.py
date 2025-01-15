@@ -6,12 +6,13 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import status
 from django.db.models import Count
+from django.shortcuts import get_object_or_404
+import logging, base64
 from .models import User, Event, Item, ItemRating
-from .serializers import MobileEventSerializer, OwnerEventSerializer, EventSerializer, ItemSerializer, EventMember, MobileEventItemSerializer, ItemRatingSerializer, ItemDetailSerializer, ItemRatingDetailSerializer
+from .serializers import MobileEventSerializer, OwnerEventSerializer, EventSerializer, ItemSerializer, EventMember, MobileEventItemSerializer, ItemRatingSerializer, ItemDetailSerializer, ItemRatingDetailSerializer, EventEditSerializer
 from rest_framework.authentication import get_authorization_header
-import logging
-import base64
 from io import BytesIO
+
 logger = logging.getLogger(__name__)
 
 class RegisterView(APIView):
@@ -120,17 +121,57 @@ class CreateEventView(APIView):
             return Response({'error': str(e)}, status=400)
 
 
-# class CreateEventView(APIView):
-#     permission_classes = [IsAuthenticated]
-#
-#     def post(self, request):
-#         data = request.data
-#         data['owner'] = request.user.id
-#         serializer = EventSerializer(data=request.data)
-#         if serializer.is_valid():
-#             serializer.save(owner=request.user)
-#             return Response(serializer.data, status=status.HTTP_201_CREATED)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class EventDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        event = get_object_or_404(Event, pk=pk)
+        if event.owner != request.user:
+            return Response({"error": "You are not authorized to view this event."}, status=status.HTTP_403_FORBIDDEN)
+        serializer = EventSerializer(event)
+        return Response(serializer.data)
+
+class EventEditView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, pk):
+        event = get_object_or_404(Event, pk=pk)
+        if event.owner != request.user:
+            return Response({"error": "You are not authorized to edit this event."}, status=status.HTTP_403_FORBIDDEN)
+
+        data = request.data
+        image_data = data.get('image', None)
+
+        if image_data:
+            print("Received image (base64):", image_data[:100])  # Wypisujemy początek obrazu, by nie zaśmiecać konsoli
+
+            try:
+                # Sprawdź, czy dane zawierają prefiks "data:image/jpeg;base64,"
+                if image_data.startswith("data:image/jpeg;base64,"):
+                    # Usunięcie prefiksu
+                    image_data = image_data.split(",")[1]
+                    
+                # Przekształcanie danych base64 na binarny format
+                image_binary = base64.b64decode(image_data)  # Dekodowanie
+
+                event.image = image_binary  # Zapisz obraz jako BLOB w bazie danych
+            except Exception as e:
+                print(f"Error decoding image: {e}")
+                return Response({"error": "Invalid image data"}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = EventEditSerializer(event, data=data, partial=True)
+        
+        if serializer.is_valid():
+            # Sprawdzamy, czy item_properties i default_values zostały poprawnie przekazane
+            #print("Validated item_properties:", serializer.validated_data.get('item_properties'))
+            #print("Validated default_values:", serializer.validated_data.get('default_values'))
+            
+            # Zapisz zmodyfikowany event
+            serializer.save()
+            return Response(serializer.data)
+        print("Validation errors:", serializer.errors)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class MobileItemsListView(APIView):
     def get(self, request, event_id):
@@ -231,8 +272,19 @@ class ItemRatingAddOrModifyView(APIView):
 
         return Response({"message": message}, status=status.HTTP_200_OK)
 
+
 class Decrypt(APIView):
     def get(self, request, event_id):
         event = Event.objects.get(id=event_id)
         password = event.get_password_decrypted()
         return Response({"message": password}, status=status.HTTP_200_OK)
+
+class UserEventsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user  # Pobierz zalogowanego użytkownika
+        events = Event.objects.filter(owner=user)  # Wyszukaj wszystkie wydarzenia użytkownika
+        serializer = EventSerializer(events, many=True)
+        return Response(serializer.data)
+

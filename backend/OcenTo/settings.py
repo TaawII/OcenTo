@@ -129,6 +129,7 @@ DATABASES = {
             'ssl': {'ca': None},  # Wyłączenie SSL
             'autocommit': True,   # Ustaw autocommit
             'sql_mode': 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION',
+            'charset': 'utf8mb4',  # Odpowiednie kodowanie znaków
         },
     }
 }
@@ -155,14 +156,21 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+# LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+# TIME_ZONE = 'UTC'
 
+# USE_I18N = True
+
+# USE_TZ = True
+
+# DATE_FORMAT = 'd-m-Y'
+
+LANGUAGE_CODE = 'pl'  # Polski
+USE_L10N = True       # Używaj lokalizacji dla formatów daty, czasu itp.
+TIME_ZONE = 'Europe/Warsaw'  # Lokalna strefa czasowa
 USE_I18N = True
-
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/

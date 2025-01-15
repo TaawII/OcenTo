@@ -1,0 +1,65 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0px;
+  padding: 0px;
+  background-color: #f9f9f9;
+  font-size: 18px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  width: 400px;
+}
+
+label {
+  margin-top: 10px;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+input, textarea, button {
+  margin-top: 5px;
+  padding: 10px;
+  font-size: 18px;
+}
+
+button {
+  margin-top: 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 12px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #45a049;
+}
+
+.error {
+  color: red;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.field-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+input {
+  margin-top: 3px;
+  padding: 10px;
+  font-size: 18px;
+}
+
+button.remove-field {
+  margin-left: 5px;
+  height: 40px;
+  align-self: center;
+  margin-top: 5px;
+  font-size: 18px;
+  padding: 5px 10px;
+}

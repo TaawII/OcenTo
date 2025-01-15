@@ -4,7 +4,7 @@ from django.contrib.auth.hashers import make_password, check_password
 from rest_framework import serializers
 from django.db.models import Avg
 from .models import User, Event, Item, EventMember, ItemRating
-import logging
+import logging, json, base64
 logger = logging.getLogger(__name__)
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -44,19 +44,20 @@ class MobileEventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = [
-            'id', 'title', 'owner', 'status', 'start_time', 'end_time', 'is_private', 'categories', 'member_count'
+            'id', 'title', 'owner', 'status', 'start_time', 'end_time', 'is_private', 'categories', 'member_count', 'image'
         ]
 
 class OwnerEventSerializer(serializers.ModelSerializer):
     owner_id = serializers.PrimaryKeyRelatedField(source='owner', read_only=True)
     owner_name = serializers.StringRelatedField(source='owner')
     member_count = serializers.IntegerField(read_only=True)
+    image = serializers.ImageField(required=False, allow_null=True)
 
     class Meta:
         model = Event
         fields = [
             'id', 'title', 'item_properties', 'default_values', 'owner_id', 'owner_name',
-            'status', 'start_time', 'end_time', 'is_private', 'password', 'categories', 'member_count'
+            'status', 'start_time', 'end_time', 'is_private', 'password', 'categories', 'member_count', 'image'
         ]
 
 class ItemSerializer(serializers.ModelSerializer):
@@ -88,9 +89,32 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = [
-            'title', 'item_properties', 'default_values', 'owner', 'status',
-            'start_time', 'end_time', 'password', 'categories', 'image'
-        ]
+            'id','title', 'item_properties', 'default_values', 'owner', 'status',
+            'start_time', 'end_time', 'password', 'categories', 'image', 'is_private']
+
+
+class EventEditSerializer(serializers.ModelSerializer):
+    start_time = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%S")
+    end_time = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%S")
+
+    class Meta:
+        model = Event
+        fields = ['title', 'item_properties', 'default_values', 'status', 'start_time', 'end_time', 'is_private', 'password', 'categories', 'image']
+        
+    def validate_item_properties(self, value):
+        # Sprawdzenie, czy dane są listą
+        if isinstance(value, list):
+            return value
+        else:
+            raise serializers.ValidationError("Item properties must be a list.")
+
+    def validate_default_values(self, value):
+        # Sprawdzenie, czy dane są listą
+        if isinstance(value, list):
+            return value
+        else:
+            raise serializers.ValidationError("Default values must be a list.")
+
 
 class MobileItemEventSerializer(serializers.ModelSerializer):
     average_rating = serializers.SerializerMethodField()

@@ -1,75 +1,6 @@
 const axios = require('axios');
 require('dotenv').config();
 
-
-// // Funkcja do obsługi rejestracji
-// exports.registerUser = async (req, res) => {
-//     const { username, password } = req.body;
-//     const serverURL = process.env.serwerURL; // Adres API
-  
-//     try {
-//       const registerURL = `http://${serverURL}/register`;
-//       const response = await axios.post(registerURL, {
-//         username,
-//         password,
-//       });
-  
-//       if (response.data && response.data.success) {
-//         res.render('auth/register', { 
-//           error: null, 
-//           success: 'Konto zostało pomyślnie utworzone!' 
-//         });
-//       } else {
-//         res.render('auth/register', { 
-//           error: 'Nieoczekiwana odpowiedź serwera.', 
-//           success: null 
-//         });
-//       }
-//     } catch (error) {
-//       let errorMessage = 'Wystąpił błąd podczas rejestracji.';
-//       if (error.response && error.response.data && error.response.data.message) {
-//         errorMessage = error.response.data.message;
-//       }
-  
-//       res.render('auth/register', { 
-//         error: errorMessage, 
-//         success: null 
-//       });
-//     }
-//   };
-  
-//   // Funkcja do obsługi logowania
-//   exports.loginUser = async (req, res) => {
-//     const { username, password } = req.body;
-//     const serverURL = process.env.serwerURL; // Adres API
-  
-//     try {
-//       const loginURL = `http://${serverURL}/login`;
-//       const response = await axios.post(loginURL, { username, password });
-  
-//       if (response.data && response.data.token) {
-//         res.cookie('auth_token', response.data.token, { httpOnly: true, secure: false });
-//         res.redirect('/dashboard');
-//       } else {
-//         res.render('auth/login', { 
-//           error: 'Nieoczekiwana odpowiedź serwera.', 
-//           success: null 
-//         });
-//       }
-//     } catch (error) {
-//       let errorMessage = 'Wystąpił błąd podczas logowania.';
-//       if (error.response && error.response.data && error.response.data.message) {
-//         errorMessage = error.response.data.message;
-//       }
-  
-//       res.render('auth/login', { 
-//         error: errorMessage, 
-//         success: null 
-//       });
-//     }
-//   };
-
-
 // Funkcja do obsługi rejestracji
 exports.registerUser = async (req, res) => {
   const { username, password } = req.body;
@@ -126,7 +57,7 @@ exports.loginUser = async (req, res) => {
         secure: process.env.NODE_ENV === 'production', // Jeżeli aplikacja działa w trybie produkcyjnym (production), ciasteczko będzie wymagać HTTPS.
         maxAge: 7 * 24 * 60 * 60 * 1000 // Ciasteczko ważne przez tydzień.
       });
-      res.redirect('/login/successful-login');  // Chwilowe testowe przekierowanie po udanym zalogowaniu
+      res.redirect('/panel/events');
     } else {
       // Jeśli odpowiedź serwera nie zawiera tokena, wyświetlamy ogólny błąd
       const errorMessage = response.data.error || 'Nieoczekiwana odpowiedź serwera.';
@@ -152,5 +83,14 @@ exports.loginUser = async (req, res) => {
       success: null 
     });
   }
+};
+
+exports.logout = (req, res) => {
+  
+  res.clearCookie('auth_token');  //Usunięcie ciasteczka
+  res.render('auth/login', {
+    success: 'Zostałeś wylogowany.',
+    error: null
+  });
 };
 
