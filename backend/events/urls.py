@@ -3,7 +3,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 
 from .views import RegisterView, LoginView, MobileEventsListView, OwnerEventsListView, CreateEventView, \
     MobileItemsListView, CheckEventMembershipView, JoinEventView, VerifyTokenView, MobileItemDetailsView, \
-    ItemRatingAddOrModifyView
+    ItemRatingAddOrModifyView, Decrypt
 
 # Zapisujcie wszystkie url w całosci z małych liter: np. zamiast MobileEventsList używajcie mobileeventslist
 urlpatterns = [
@@ -19,4 +19,5 @@ urlpatterns = [
     path('joinevent', JoinEventView.as_view(), name='join_event'),
     path('create', CreateEventView.as_view(), name='create_event'),
     path('token/verify', VerifyTokenView.as_view(), name='token_verify'),
+    path('password/<event_id>',Decrypt.as_view(), name='token_decrypt'),
 ]

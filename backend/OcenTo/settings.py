@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
-
+from decouple import config
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-wjj8g*bbx%wx*^f8vk^w)t6!m24z7t3l(4x!p%of$b03^btwso'
-FERNET_ENCRYPTION_KEY = 'CVdTx8Ep3FmpzKViF-PRDXte_PAxF1AcIOeLxnf90oQ='
+FERNET_ENCRYPTION_KEY = config('FERNET_ENCRYPTION_KEY')
 
 
 # SECURITY WARNING: don't run with debug turned on in production!

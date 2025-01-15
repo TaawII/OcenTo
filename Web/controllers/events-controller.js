@@ -1,6 +1,8 @@
 const FormData = require('form-data'); // Wymaga zainstalowania form-data
 const fs = require('fs');
 const axios = require('axios');
+const { encryptPassword } = require('../utils/encryption');
+const { decryptPassword } = require('../utils/encryption');
 
 exports.renderCreateEvent = (req, res) => {
   res.render('events/create', { error: null });
@@ -23,6 +25,10 @@ exports.submitEvent = async (req, res) => {
   if (typeof categories === 'string') {
     categories = [categories];
   }
+  let password = req.body.password || null;
+    if (password) {
+      password = encryptPassword(password); // Szyfruj hasło przed wysłaniem
+    }
     const formData = {
       title: req.body.title,
       item_properties: item_properties || [], 
@@ -31,11 +37,10 @@ exports.submitEvent = async (req, res) => {
       start_time: req.body.start_time,
       end_time: req.body.end_time,
       is_private: isPrivate, //poprawka
-      password: req.body.password || null,
+      password: password || null,
       categories: categories || [],
       image: imageBase64
     };
-    console.log(formData);
 
     const token = req.cookies.auth_token;
     console.log(token);
@@ -52,4 +57,29 @@ exports.submitEvent = async (req, res) => {
     res.status(500).send('Błąd podczas przesyłania Eventu');
   } 
 }
- 
+exports.getDecryptedPassword = (req, res) => {
+  try {
+    const { encryptedPassword } = req.body;
+
+    // Sprawdzenie, czy zaszyfrowane hasło zostało przesłane
+    if (!encryptedPassword) {
+      return res.status(400).json({ error: 'Brak zaszyfrowanego hasła do odszyfrowania' });
+    }
+
+    console.log('Zaszyfrowane hasło otrzymane z Postmana:', encryptedPassword);
+
+    // Próba odszyfrowania hasła
+    const decryptedPassword = decryptPassword(encryptedPassword);
+
+    console.log('Odszyfrowane hasło:', decryptedPassword);
+
+    // Zwrócenie odszyfrowanego hasła w odpowiedzi
+    res.status(200).json({ decryptedPassword });
+  } catch (error) {
+    console.error('Błąd podczas odszyfrowywania hasła:', error.message);
+
+    // Jeśli wystąpił błąd, zwróć odpowiednią odpowiedź
+    res.status(500).json({ error: 'Błąd podczas odszyfrowywania hasła. Upewnij się, że zaszyfrowane hasło jest poprawne.' });
+  }
+};
+

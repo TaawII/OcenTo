@@ -3,7 +3,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
 from rest_framework.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
-
+from .encryption import encrypt_password, decrypt_password
 
 
 class UserManager(BaseUserManager):
@@ -90,6 +90,17 @@ class Event(models.Model):
     categories = models.JSONField(validators=[validate_categories])
     image = models.BinaryField(blank=True, null=True)
 
+    # def save(self, *args, **kwargs):
+    #     # Szyfruj hasło przed zapisem
+    #     if self.password:
+    #         self.password = encrypt_password(self.password)
+    #     super().save(*args, **kwargs)
+
+    def get_password_decrypted(self):
+        # Odszyfruj hasło przy odczycie
+        if self.password:
+            return decrypt_password(self.password)
+        return None
     def __str__(self):
         return self.title
 

@@ -230,3 +230,9 @@ class ItemRatingAddOrModifyView(APIView):
             message = "Komentarz został zaktualizowany pomyślnie"
 
         return Response({"message": message}, status=status.HTTP_200_OK)
+
+class Decrypt(APIView):
+    def get(self, request, event_id):
+        event = Event.objects.get(id=event_id)
+        password = event.get_password_decrypted()
+        return Response({"message": password}, status=status.HTTP_200_OK)

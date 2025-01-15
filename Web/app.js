@@ -16,6 +16,10 @@ const eventsRouter = require('./routes/events');
 var app = express();
 
 require('dotenv').config();
+if (!process.env.FERNET_ENCRYPTION_KEY) {
+  console.error('Brak klucza FERNET_ENCRYPTION_KEY w pliku .env');
+  process.exit(1); // Zatrzymanie aplikacji
+}
 
 const PORT = process.env.PORT || 3000;
 
@@ -40,6 +44,7 @@ app.use('/', indexRouter);
 app.use('/register', registerRouter);
 app.use('/login', loginRouter);
 app.use('/events',eventsRouter)
+app.use('/decrypt-password',eventsRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
