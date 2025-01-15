@@ -1,4 +1,8 @@
+const FormData = require('form-data'); // Wymaga zainstalowania form-data
+const fs = require('fs');
 const axios = require('axios');
+const { encryptPassword } = require('../utils/encryption');
+const { decryptPassword } = require('../utils/encryption');
 
 exports.getEvent = async (req, res) => {
   const { id } = req.params;
@@ -148,41 +152,80 @@ exports.renderEditForm = async (req, res) => {
 exports.renderCreateEvent = (req, res) => {
   res.render('events/create', { error: null });
 };
-
-exports.createEvent = async (req, res) => {
-  const formData = {
-    title: req.body.title,
-    item_properties: req.body.item_properties || [],
-    default_values: req.body.default_values || [],
-    status: req.body.status,
-    start_time: req.body.start_time,
-    end_time: req.body.end_time,
-    is_private: req.body.is_private === 'on',
-    password: req.body.password || null,
-    categories: req.body.categories || []
-  };
-
-  // Pobranie tokena z ciasteczek (czyli autoryzacja)
-  const token = req.cookies.auth_token; // Token przechowywany w ciasteczku 'auth_token'
-
-  if (!token) {
-    return res.render('events/create', { error: 'Nie znaleziono tokena autoryzacyjnego.' });
-  }
-
+exports.submitEvent = async (req, res) => {
   try {
-    // Wyślij dane do backendu Django
+    let imageBase64 = req.file? req.file.buffer.toString('base64'):null;
+    const isPrivate = req.body.is_private === 'on' ? true : false; // Sprawdzamy, czy checkbox jest zaznaczony
+
+  //Sprawdzenie, czy dane item_properties i default_values są w formie tablicy
+  let { item_properties, default_values, categories } = req.body;
+
+
+  //Jeśli są pojedynczymi wartościami, przekonwertuj je na tablice
+  if (typeof item_properties === 'string') {
+    item_properties = [item_properties];
+  }
+  if (typeof default_values === 'string') {
+    default_values = [default_values];
+  }
+  if (typeof categories === 'string') {
+    categories = [categories];
+  }
+  let password = req.body.password || null;
+    if (password) {
+      password = encryptPassword(password); // Szyfruj hasło przed wysłaniem
+    }
+    const formData = {
+      title: req.body.title,
+      item_properties: item_properties || [], 
+      default_values: default_values || [],   
+      status: req.body.status,
+      start_time: req.body.start_time,
+      end_time: req.body.end_time,
+      is_private: isPrivate, //poprawka
+      password: password || null,
+      categories: categories || [],
+      image: imageBase64
+    };
+
+    const token = req.cookies.auth_token;
+    console.log(token);
+    // Przesyłanie danych do Django
     const response = await axios.post('http://127.0.0.1:8000/api/events/create', formData, {
       headers: {
-        'Authorization': `Bearer ${token}`, // Użycie tokena z ciasteczek
-        'Content-Type': 'application/json'
+        'Authorization': `Bearer ${token}`,
       }
     });
-
-    // Jeśli udało się utworzyć event, przekieruj na stronę z potwierdzeniem
-    res.redirect('/events/create?success=true');
+ 
+    res.send('Event został przesłany pomyślnie!');
   } catch (error) {
     console.error(error);
-    res.render('events/create', { error: 'Wystąpił błąd podczas tworzenia wydarzenia.' });
+    res.status(500).send('Błąd podczas przesyłania Eventu');
+  } 
+}
+exports.getDecryptedPassword = (req, res) => {
+  try {
+    const { encryptedPassword } = req.body;
+
+    // Sprawdzenie, czy zaszyfrowane hasło zostało przesłane
+    if (!encryptedPassword) {
+      return res.status(400).json({ error: 'Brak zaszyfrowanego hasła do odszyfrowania' });
+    }
+
+    console.log('Zaszyfrowane hasło otrzymane z Postmana:', encryptedPassword);
+
+    // Próba odszyfrowania hasła
+    const decryptedPassword = decryptPassword(encryptedPassword);
+
+    console.log('Odszyfrowane hasło:', decryptedPassword);
+
+    // Zwrócenie odszyfrowanego hasła w odpowiedzi
+    res.status(200).json({ decryptedPassword });
+  } catch (error) {
+    console.error('Błąd podczas odszyfrowywania hasła:', error.message);
+
+    // Jeśli wystąpił błąd, zwróć odpowiednią odpowiedź
+    res.status(500).json({ error: 'Błąd podczas odszyfrowywania hasła. Upewnij się, że zaszyfrowane hasło jest poprawne.' });
   }
 }
 
@@ -225,3 +268,4 @@ exports.getUserEvents = async (req, res) => {
     res.status(500).send('Error fetching user events.');
   }
 };
+

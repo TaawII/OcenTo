@@ -3,6 +3,7 @@ from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import status
 from django.db.models import Count
 from django.shortcuts import get_object_or_404
@@ -10,6 +11,7 @@ import logging, base64
 from .models import User, Event, Item, ItemRating
 from .serializers import MobileEventSerializer, OwnerEventSerializer, EventSerializer, ItemSerializer, EventMember, MobileEventItemSerializer, ItemRatingSerializer, ItemDetailSerializer, ItemRatingDetailSerializer, EventEditSerializer
 from rest_framework.authentication import get_authorization_header
+from io import BytesIO
 
 logger = logging.getLogger(__name__)
 
@@ -75,18 +77,49 @@ class OwnerEventsListView(APIView):
         serializer = OwnerEventSerializer(events, many=True)
         return Response(serializer.data)
 
+
 class CreateEventView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         data = request.data
-        data['owner'] = request.user.id
-        serializer = EventSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(owner=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+        id = request.user.id
+        try:
+            # Pobieranie użytkownika na podstawie przekazanego ID
+            owner = User.objects.get(id=id)
+            image_binary = ''
+            # Sprawdzanie, czy obraz jest przesyłany w formacie Base64
+            image_data = data.get('image', None)
+            if image_data:
+                try:
+                    if image_data.startswith("data:image/jpeg;base64,"):
+                        # Usunięcie prefiksu
+                        image_data = image_data.split(",")[1]
+
+                        # Przekształcanie danych base64 na binarny format
+                    image_binary = base64.b64decode(image_data)  # Dekodowanie
+                except Exception as e:
+                    return Response({'error': f'Błąd przy dekodowaniu obrazu: {str(e)}'}, status=400)
+            # Tworzenie nowego wydarzenia
+            event = Event.objects.create(
+                title=data.get('title'),
+                item_properties=data.get('item_properties'),
+                default_values=data.get('default_values'),
+                owner=owner,
+                status=data.get('status'),
+                start_time=data.get('start_time'),
+                end_time=data.get('end_time'),
+                is_private=data.get('is_private', False),
+                password=data.get('password'),
+                categories=data.get('categories'),
+                image=image_binary
+            )
+
+            return Response({'message': 'Event zapisany pomyślnie!', 'id': event.id})
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+
 
 class EventDetailView(APIView):
     permission_classes = [IsAuthenticated]
@@ -138,6 +171,7 @@ class EventEditView(APIView):
             return Response(serializer.data)
         print("Validation errors:", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class MobileItemsListView(APIView):
     def get(self, request, event_id):
@@ -237,8 +271,13 @@ class ItemRatingAddOrModifyView(APIView):
             message = "Komentarz został zaktualizowany pomyślnie"
 
         return Response({"message": message}, status=status.HTTP_200_OK)
-    
-    
+
+
+class Decrypt(APIView):
+    def get(self, request, event_id):
+        event = Event.objects.get(id=event_id)
+        password = event.get_password_decrypted()
+        return Response({"message": password}, status=status.HTTP_200_OK)
 
 class UserEventsView(APIView):
     permission_classes = [IsAuthenticated]
@@ -248,3 +287,4 @@ class UserEventsView(APIView):
         events = Event.objects.filter(owner=user)  # Wyszukaj wszystkie wydarzenia użytkownika
         serializer = EventSerializer(events, many=True)
         return Response(serializer.data)
+

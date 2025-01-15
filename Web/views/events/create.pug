@@ -3,11 +3,12 @@ html
   head
     title Add New Event
     link(rel="stylesheet" href="/stylesheets/style.css")
+    script(src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js")
   body
     h1 Add New Event
     if error
       p.error #{error}
-    form(action="/events/create" method="POST")
+    form(action="/events/create" method="POST" enctype="multipart/form-data")
       label(for="title") Event Name
       input(type="text" name="title" required)
 
@@ -18,7 +19,11 @@ html
       input(type="datetime-local" name="end_time" required)
 
       label(for="status") Status
-      input(type="text" name="status" required)
+      select(name="status" required) 
+        option(value="Active") Active
+        option(value="Waiting") Waiting
+        option(value="End") End
+        option(value="ActiveWithRanking") Active with Ranking
 
       label(for="categories") Categories
       div
@@ -45,6 +50,10 @@ html
           button(type="button" class="remove-field") - Remove
 
       button(type="button" id="add-field") + Add New Field
+
+      label(for="image") Upload Event Image
+      input(type="file" name="image" accept='image/*' required)
+      
       button(type="submit") Create Event
 
     script(src="https://code.jquery.com/jquery-3.6.0.min.js")

@@ -4,7 +4,7 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-const multer = require('multer');     //obsługa plików
+const multer = require('multer'); 
 const bodyParser = require('body-parser');
 
 //Routery
@@ -18,25 +18,21 @@ const logoutRouter = require('./routes/logout');
 var app = express();
 
 require('dotenv').config();
+if (!process.env.FERNET_ENCRYPTION_KEY) {
+  console.error('Brak klucza FERNET_ENCRYPTION_KEY w pliku .env');
+  process.exit(1); // Zatrzymanie aplikacji
+}
 
 const PORT = process.env.PORT || 3000;
 
 // view engine setup
 app.set('view engine', 'pug');
+
 app.set('views', path.join(__dirname, 'views'));
-
 app.use(methodOverride('_method')); //Umożliwia korzystanie z PUT/PATCH w formularzach
-
-// Konfiguracja multer - przechowywanie plików w pamięci
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
-
-// Middleware do obsługi plików
 app.use(upload.single('image')); // 'image' to nazwa pola w formularzu, które przesyła plik
-
-
-
-// Middleware do parsowania danych formularza (URL encoded)
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());  // Middleware do obsługi danych JSON
 
@@ -49,6 +45,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/register', registerRouter);
 app.use('/login', loginRouter);
+app.use('/decrypt-password',eventsRouter);
 app.use('/panel', panelRouter);
 app.use('/events', eventsRouter);
 app.use('/logout', logoutRouter);
@@ -60,6 +57,7 @@ app.use((req, res, next) => {
   console.log("Received body:", req.body);  // Logowanie danych z formularza
   next();
 });
+
 
 
 // catch 404 and forward to error handler

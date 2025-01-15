@@ -2,6 +2,8 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
 from rest_framework.exceptions import ValidationError
+from django.core.validators import FileExtensionValidator
+from .encryption import encrypt_password, decrypt_password
 
 
 class UserManager(BaseUserManager):
@@ -67,15 +69,20 @@ def validate_categories(value):
         if item not in ALLOWED_CATEGORIES:
             raise ValidationError(f"Invalid category: {item}. Allowed categories are: {', '.join(ALLOWED_CATEGORIES)}")
 
-
 class Event(models.Model):
+    STATUS_CHOICES = [
+        ('Active', 'Active'),
+        ('Waiting', 'Waiting'),
+        ('End', 'End'),
+        ('ActiveWithRanking', 'ActiveWithRanking'),
+    ]
     id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=255)
     item_properties = models.JSONField(
         help_text='Klucz wartości dla item na podstawie którego będą określane parametry podczas dodawania.')
     default_values = models.JSONField(help_text='Wartości domyślne')
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_events')
-    status = models.CharField(max_length=255)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Waiting')
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     is_private = models.BooleanField(default=False)
@@ -83,6 +90,17 @@ class Event(models.Model):
     categories = models.JSONField(validators=[validate_categories])
     image = models.BinaryField(blank=True, null=True)
 
+    # def save(self, *args, **kwargs):
+    #     # Szyfruj hasło przed zapisem
+    #     if self.password:
+    #         self.password = encrypt_password(self.password)
+    #     super().save(*args, **kwargs)
+
+    def get_password_decrypted(self):
+        # Odszyfruj hasło przy odczycie
+        if self.password:
+            return decrypt_password(self.password)
+        return None
     def __str__(self):
         return self.title
 

@@ -1,3 +1,5 @@
+import base64
+
 from django.contrib.auth.hashers import make_password, check_password
 from rest_framework import serializers
 from django.db.models import Avg
@@ -86,7 +88,9 @@ class ItemRatingSerializer(serializers.ModelSerializer):
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
-        fields = ['id', 'title', 'item_properties', 'default_values', 'status', 'start_time', 'end_time', 'is_private', 'categories', 'image']
+        fields = [
+            'id','title', 'item_properties', 'default_values', 'owner', 'status',
+            'start_time', 'end_time', 'password', 'categories', 'image', 'is_private']
 
 
 class EventEditSerializer(serializers.ModelSerializer):
@@ -110,6 +114,7 @@ class EventEditSerializer(serializers.ModelSerializer):
             return value
         else:
             raise serializers.ValidationError("Default values must be a list.")
+
 
 class MobileItemEventSerializer(serializers.ModelSerializer):
     average_rating = serializers.SerializerMethodField()
