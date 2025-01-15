@@ -10,8 +10,4 @@ router.get('/', (req, res) => {
 // Obsługa logowania (POST)
 router.post('/', loginUser);
 
-router.get('/successful-login', (req, res) => {
-  res.render('auth/successful-login'); // Renderowanie widoku successful-login.pug
-});
-
 module.exports = router;

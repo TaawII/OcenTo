@@ -57,7 +57,7 @@ exports.loginUser = async (req, res) => {
         secure: process.env.NODE_ENV === 'production', // Jeżeli aplikacja działa w trybie produkcyjnym (production), ciasteczko będzie wymagać HTTPS.
         maxAge: 7 * 24 * 60 * 60 * 1000 // Ciasteczko ważne przez tydzień.
       });
-      res.redirect('/login/successful-login');  // Chwilowe testowe przekierowanie po udanym zalogowaniu
+      res.redirect('/panel/events');
     } else {
       // Jeśli odpowiedź serwera nie zawiera tokena, wyświetlamy ogólny błąd
       const errorMessage = response.data.error || 'Nieoczekiwana odpowiedź serwera.';
@@ -83,5 +83,14 @@ exports.loginUser = async (req, res) => {
       success: null 
     });
   }
+};
+
+exports.logout = (req, res) => {
+  
+  res.clearCookie('auth_token');  //Usunięcie ciasteczka
+  res.render('auth/login', {
+    success: 'Zostałeś wylogowany.',
+    error: null
+  });
 };
 

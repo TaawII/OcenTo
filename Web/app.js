@@ -13,6 +13,7 @@ const registerRouter = require('./routes/register');
 const loginRouter = require('./routes/login');
 const panelRouter = require('./routes/panel');
 const eventsRouter = require('./routes/events');
+const logoutRouter = require('./routes/logout');
 
 var app = express();
 
@@ -21,8 +22,8 @@ require('dotenv').config();
 const PORT = process.env.PORT || 3000;
 
 // view engine setup
-app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
+app.set('views', path.join(__dirname, 'views'));
 
 app.use(methodOverride('_method')); //Umożliwia korzystanie z PUT/PATCH w formularzach
 
@@ -50,6 +51,7 @@ app.use('/register', registerRouter);
 app.use('/login', loginRouter);
 app.use('/panel', panelRouter);
 app.use('/events', eventsRouter);
+app.use('/logout', logoutRouter);
 
 
 //debugowanie

@@ -1,0 +1,35 @@
+extends layout
+
+block content
+  .page-header
+    h1 Moje wydarzenia
+
+  doctype html
+  html
+    head
+      link(rel="stylesheet", href="/stylesheets/panel/user-events/style.css")
+    body
+  //- Tabela z nagłówkami kolumn
+  table
+    thead
+      tr
+        th Tytuł
+        th Status
+        th Start
+        th Koniec
+        th Akcje
+    tbody
+      each event in events
+        tr
+          td #{event.title}
+          td #{event.status}
+          td #{event.start_time}
+          td #{event.end_time}
+          td
+            a.btn-details(href=`/panel/events/${event.id}`) Szczegóły
+            a.btn-edit(href=`/panel/events/${event.id}/edit`) Edycja
+            a.btn-stats(href=`/panel/events/${event.id}/edit`) Statystyki - niedokończone
+
+  //- Jeżeli nie ma wydarzeń
+  if events.length === 0
+    p Nie masz żadnych wydarzeń.

@@ -1,223 +1,120 @@
-//- doctype html
-//- html(lang="pl")
-//-   head
-//-     meta(charset="UTF-8")
-//-     meta(name="viewport" content="width=device-width, initial-scale=1.0")
-//-     title Edycja eventu
-//-     link(rel="stylesheet", href="/stylesheets/panel/edit-event/style.css")
-//-     script(src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js")
+extends layout
 
-//-   body
-//-     h1 Edycja eventu
-
-//-     if error
-//-       p.error #{error}
-
-//-     form(action=`/panel/events/${event.id}/edit` method="POST" enctype="multipart/form-data")
-//-       input(type="hidden" name="_method" value="PUT")
-
-//-       .field-row
-//-         label(for="title") Tytuł:
-//-         input(type="text", name="title", placeholder="Tytuł", value=event.title, required)
-
-//-       .field-row
-//-         label(for="start_time") Data startu:
-//-         input(type="datetime-local", name="start_time", placeholder="Data startu", value=event.start_time, required)
-
-//-       .field-row
-//-         label(for="end_time") Data zakończenia:
-//-         input(type="datetime-local", name="end_time", placeholder="Data zakończenia", value=event.end_time, required)
-
-//-       .field-row
-//-         label(for="is_private") Prywatny:
-//-         input(type="checkbox", name="is_private", checked=event.is_private)
-//-         <input type="hidden" name="is_private" value="false">  <!-- Ukryte pole do ustawienia wartości false -->
-
-//-       .field-row
-//-         label(for="password") Hasło (opcjonalne):
-//-         input(type="password", name="password", placeholder="Hasło (opcjonalne)", value=event.password)
-
-//-       .field-row
-//-         label(for="image") Zdjęcie:
-//-         input(type="file", name="image", accept="image/*")
-//-         if event.image
-//-           img(src=`data:image/jpeg;base64,${event.image}`, alt="Current Image", width="100")
-//-         else
-//-           p Brak zdjęcia
-
-//-       h2 Item Properties i Default Values
-//-       #fields-container
-//-         each property, index in event.item_properties
-//-           .field-row
-//-             input(type="text", name="item_properties[]" placeholder="Nazwa" value=property required)
-//-             input(type="text", name="default_values[]" placeholder="Default" value=event.default_values[index] required)
-//-             button(type="button", class="remove-field") -
-
-//-       .field-row
-//-         button(type="button", id="add-field") + Dodaj pole
-//-         button(type="submit") Zapisz zmiany
-
-//-     script.
-//-       $(document).ready(function() {
-//-         function formatDate(date) {
-//-           let d = new Date(date);
-//-           return d.toISOString().slice(0, 16);  // Zwróci datę w formacie "YYYY-MM-DDTHH:MM"
-//-         }
-
-//-         $('input[type="datetime-local"]').each(function() {
-//-           let value = $(this).val();
-//-           if (value && value.length === 16) {
-//-             $(this).val(formatDate(value));
-//-           }
-//-         });
-
-//-         const container = $('#fields-container');
-//-         const addButton = $('#add-field');
-
-//-         addButton.on('click', function() {
-//-           const newRow = $(`
-//-             <div class="field-row">
-//-               <input type="text" name="item_properties[]" placeholder="Nazwa" required>
-//-               <input type="text" name="default_values[]" placeholder="Default" required>
-//-               <button type="button" class="remove-field">-</button>
-//-             </div>
-//-           `);
-
-//-           newRow.find('.remove-field').on('click', function() {
-//-             $(this).parent().remove();
-//-           });
-
-//-           container.append(newRow);
-//-         });
-
-//-         $(document).on('click', '.remove-field', function() {
-//-           $(this).parent().remove();
-//-         });
-//-       });
-
-
-
-
-
-
-
-
-
-
-
-doctype html
-html(lang="pl")
-  head
-    meta(charset="UTF-8")
-    meta(name="viewport" content="width=device-width, initial-scale=1.0")
-    title Edycja eventu
-    link(rel="stylesheet", href="/stylesheets/panel/edit-event/style.css")
-    script(src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js")
-
-  body
+block content
+  .page-header
     h1 Edycja eventu
 
-    if error
-      p.error #{error}
+  doctype html
+  html(lang="pl")
+    head
+      meta(charset="UTF-8")
+      meta(name="viewport" content="width=device-width, initial-scale=1.0")
+      title Edycja eventu
+      link(rel="stylesheet", href="/stylesheets/panel/edit-event/style.css")
+      script(src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js")
 
-    form(action=`/panel/events/${event.id}/edit` method="POST" enctype="multipart/form-data")
-      input(type="hidden" name="_method" value="PUT")
+    body
+      if error
+        p.error #{error}
 
-      .field-row
-        label(for="title") Tytuł:
-        input(type="text", name="title", placeholder="Tytuł", value=event.title, required)
+      form(action=`/panel/events/${event.id}/edit` method="POST" enctype="multipart/form-data")
+        input(type="hidden" name="_method" value="PUT")
 
-      .field-row
-        label(for="start_time") Data startu:
-        input(type="datetime-local", name="start_time", placeholder="Data startu", value=event.start_time, required)
+        .field-row
+          label(for="title") Tytuł:
+          input(type="text", name="title", placeholder="Tytuł", value=event.title, required)
 
-      .field-row
-        label(for="end_time") Data zakończenia:
-        input(type="datetime-local", name="end_time", placeholder="Data zakończenia", value=event.end_time, required)
+        .field-row
+          label(for="start_time") Data startu:
+          input(type="datetime-local", name="start_time", placeholder="Data startu", value=event.start_time, required)
 
-      .field-row
-        label(for="is_private") Prywatny:
-        input(type="checkbox", name="is_private", checked=event.is_private)
-        //- input(type="hidden", name="is_private", value="false")  <!-- Ukryte pole do ustawienia wartości false jeśli checkbox jest odznaczony -->
+        .field-row
+          label(for="end_time") Data zakończenia:
+          input(type="datetime-local", name="end_time", placeholder="Data zakończenia", value=event.end_time, required)
 
-      .field-row
-        label(for="password") Hasło:
-        input(type="password", name="password", placeholder="Hasło (opcjonalne)", value=event.password, id="password-input")
+        .field-row
+          label(for="is_private") Prywatny:
+          input(type="checkbox", name="is_private", checked=event.is_private)
+          //- input(type="hidden", name="is_private", value="false")  <!-- Ukryte pole do ustawienia wartości false jeśli checkbox jest odznaczony -->
 
-      .field-row
-        label(for="image") Zdjęcie:
-        input(type="file", name="image", accept="image/*")
-        if event.image
-          img(src=`data:image/jpeg;base64,${event.image}`, alt="Current Image", width="100")
-        else
-          p Brak zdjęcia
+        .field-row
+          label(for="password") Hasło:
+          input(type="password", name="password", placeholder="Hasło (opcjonalne)", value=event.password, id="password-input")
 
-      h2 Item Properties i Default Values
-      #fields-container
-        each property, index in event.item_properties
-          .field-row
-            input(type="text", name="item_properties[]" placeholder="Nazwa" value=property required)
-            input(type="text", name="default_values[]" placeholder="Default" value=event.default_values[index] required)
-            button(type="button", class="remove-field") -
+        .field-row
+          label(for="image") Zdjęcie:
+          input(type="file", name="image", accept="image/*")
+          if event.image
+            img(src=`data:image/jpeg;base64,${event.image}`, alt="Current Image", width="100")
+          else
+            p Brak zdjęcia
 
-      .field-row
-        button(type="button", id="add-field") + Dodaj pole
-        button(type="submit") Zapisz zmiany
+        h2 Item Properties i Default Values
+        #fields-container
+          each property, index in event.item_properties
+            .field-row
+              input(type="text", name="item_properties[]" placeholder="Nazwa" value=property required)
+              input(type="text", name="default_values[]" placeholder="Default" value=event.default_values[index] required)
+              button(type="button", class="remove-field") -
 
-    script.
-      $(document).ready(function() {
-        function formatDate(date) {
-          let d = new Date(date);
-          return d.toISOString().slice(0, 16);  // Zwróci datę w formacie "YYYY-MM-DDTHH:MM"
+        .field-row
+          button(type="button", id="add-field") + Dodaj pole
+          button(type="submit") Zapisz zmiany
+
+  script.
+    $(document).ready(function() {
+      function formatDate(date) {
+        let d = new Date(date);
+        return d.toISOString().slice(0, 16);  // Zwróci datę w formacie "YYYY-MM-DDTHH:MM"
+      }
+
+      $('input[type="datetime-local"]').each(function() {
+        let value = $(this).val();
+        if (value && value.length === 16) {
+          $(this).val(formatDate(value));
         }
+      });
 
-        $('input[type="datetime-local"]').each(function() {
-          let value = $(this).val();
-          if (value && value.length === 16) {
-            $(this).val(formatDate(value));
-          }
-        });
+      const container = $('#fields-container');
+      const addButton = $('#add-field');
+      const passwordField = $('#password-input'); // Pole hasła
+      const privateCheckbox = $('input[name="is_private"]'); // Checkbox "is_private"
 
-        const container = $('#fields-container');
-        const addButton = $('#add-field');
-        const passwordField = $('#password-input'); // Pole hasła
-        const privateCheckbox = $('input[name="is_private"]'); // Checkbox "is_private"
-
-        // Funkcja do kontrolowania dostępności pola hasła
-        function togglePasswordField() {
-          if (privateCheckbox.is(':checked')) {
-            passwordField.prop('disabled', false); // Włącz pole hasła
-          } else {
-            passwordField.prop('disabled', true); // Wyłącz pole hasła
-            passwordField.val(''); // Wyczyść pole hasła, jeśli jest publiczny
-          }
+      // Funkcja do kontrolowania dostępności pola hasła
+      function togglePasswordField() {
+        if (privateCheckbox.is(':checked')) {
+          passwordField.prop('disabled', false); // Włącz pole hasła
+        } else {
+          passwordField.prop('disabled', true); // Wyłącz pole hasła
+          passwordField.val(''); // Wyczyść pole hasła, jeśli jest publiczny
         }
+      }
 
-        // Ustaw początkowy stan na podstawie tego, czy "is_private" jest zaznaczone
+      // Ustaw początkowy stan na podstawie tego, czy "is_private" jest zaznaczone
+      togglePasswordField();
+
+      // Zmieniamy stan pola hasła po zmianie checkboxa "is_private"
+      privateCheckbox.on('change', function() {
         togglePasswordField();
+      });
 
-        // Zmieniamy stan pola hasła po zmianie checkboxa "is_private"
-        privateCheckbox.on('change', function() {
-          togglePasswordField();
-        });
+      addButton.on('click', function() {
+        const newRow = $(`
+          <div class="field-row">
+            <input type="text" name="item_properties[]" placeholder="Nazwa" required>
+            <input type="text" name="default_values[]" placeholder="Default" required>
+            <button type="button" class="remove-field">-</button>
+          </div>
+        `);
 
-        addButton.on('click', function() {
-          const newRow = $(`
-            <div class="field-row">
-              <input type="text" name="item_properties[]" placeholder="Nazwa" required>
-              <input type="text" name="default_values[]" placeholder="Default" required>
-              <button type="button" class="remove-field">-</button>
-            </div>
-          `);
-
-          newRow.find('.remove-field').on('click', function() {
-            $(this).parent().remove();
-          });
-
-          container.append(newRow);
-        });
-
-        $(document).on('click', '.remove-field', function() {
+        newRow.find('.remove-field').on('click', function() {
           $(this).parent().remove();
         });
+
+        container.append(newRow);
       });
+
+      $(document).on('click', '.remove-field', function() {
+        $(this).parent().remove();
+      });
+    });

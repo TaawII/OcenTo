@@ -185,3 +185,43 @@ exports.createEvent = async (req, res) => {
     res.render('events/create', { error: 'Wystąpił błąd podczas tworzenia wydarzenia.' });
   }
 }
+
+exports.getUserEvents = async (req, res) => {
+  const serverURL = process.env.serwerURL;
+  const authToken = req.cookies.auth_token;
+
+  // Funkcja do formatowania daty
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    if (isNaN(date)) {
+      return "Invalid Date"; // W przypadku niepoprawnej daty
+    }
+    const options = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    };
+    return date.toLocaleString('pl-PL', options);  // Formatowanie na polski format
+  };
+
+  try {
+    const response = await axios.get(`http://${serverURL}/events/`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+
+    // Formatowanie dat dla każdego eventu
+    response.data.forEach(event => {
+      event.start_time = formatDate(event.start_time);
+      event.end_time = formatDate(event.end_time);
+    });
+
+    // Przekazanie danych wydarzeń do widoku
+    res.render('panel/user-events', { events: response.data });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error fetching user events.');
+  }
+};
