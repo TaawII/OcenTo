@@ -292,3 +292,82 @@ class UserEventsView(APIView):
         serializer = EventSerializer(events, many=True)
         return Response(serializer.data)
 
+
+class AddItemToEventView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    # GET: Zwrócenie formularza do dodania itemu w formie JSON
+    def get(self, request, event_id):
+        event = get_object_or_404(Event, id=event_id)
+
+        if event.owner != request.user:
+            return Response({"error": "Nie masz uprawnień do dodania itemu do tego wydarzenia."}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = EventSerializer(event)
+        return Response(serializer.data)
+
+    # POST: Przetwarzanie formularza i zapisanie itemu w bazie
+    def post(self, request, event_id):
+        event = get_object_or_404(Event, id=event_id)
+
+        # Sprawdzamy, czy użytkownik jest właścicielem eventu
+        if event.owner != request.user:
+            return Response({"error": "Nie masz uprawnień do dodania itemu do tego wydarzenia."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Tworzymy item na podstawie danych z formularza
+        item_data = request.data
+        
+        # Sprawdzamy, czy item o tej samej nazwie już istnieje
+        if Item.objects.filter(name=item_data.get('name'), event=event).exists():
+            return Response({"error": f"Item o nazwie '{item_data.get('name')}' już istnieje w tym wydarzeniu."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Obsługuje opcjonalne zdjęcie przesyłane w formacie Base64
+        image_data = item_data.get('image', None)
+
+        if image_data:
+            print("Received image (base64):", image_data[:100])  # Wypisujemy początek obrazu, by nie zaśmiecać konsoli
+
+            try:
+                # Sprawdź, czy dane zawierają prefiks "data:image/jpeg;base64,"
+                if image_data.startswith("data:image/jpeg;base64,"):
+                    image_data = image_data.split(",")[1]  # Usunięcie prefiksu
+
+                # Dekodowanie obrazu z base64
+                image_binary = base64.b64decode(image_data)
+                item_data['image'] = image_binary  # Zapisz obraz jako BLOB w bazie danych
+            except Exception as e:
+                print(f"Error decoding image: {e}")
+                return Response({"error": "Invalid image data"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            item_data['image'] = None  # Jeśli nie ma obrazu, ustawiamy na None (puste pole w bazie)
+
+        # Przekształcamy dane w formacie, gdzie brakujące wartości to puste ciągi
+        item_values = []
+        if isinstance(item_data.get('item_values', None), list):  # Sprawdzamy, czy item_values to lista
+            item_values = item_data['item_values']
+        else:
+            # Jeśli 'item_values' nie jest listą, traktujemy to jako domyślne wartości
+            for prop, default in zip(event.item_properties, event.default_values):
+                value = item_data.get('item_values', {}).get(prop, "")
+                item_values.append(value if value else default)
+
+        item_data['item_values'] = item_values
+        item_data['event'] = event.id
+
+        print("Wartości itemu:", item_data['item_values'])
+        print("Obrazek:", item_data['image'][:100] if item_data['image'] else 'No image')
+
+        # Serializujemy dane i zapisujemy je do bazy
+        serializer = ItemSerializer(data=item_data)
+        if serializer.is_valid():
+            # Ręcznie zapisujemy obrazek, aby upewnić się, że jest zapisany w modelu
+            item = serializer.save()
+
+            # Ponownie ładujemy zapisany obiekt i przypisujemy obrazek
+            if item_data['image'] is not None:
+                item.image = item_data['image']
+                item.save()
+
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

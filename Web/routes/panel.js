@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const eventsController = require('../controllers/events-controller');
+const itemsController = require('../controllers/items-controller');
 
 // Wszystkie eventy danego użytkownika
 router.get('/events', eventsController.getUserEvents);
@@ -13,6 +14,12 @@ router.get('/events/:id/edit', eventsController.renderEditForm);
 
 // Trasa do edytowania wydarzenia
 router.post('/events/:id/edit', eventsController.editEvent);
+
+// Wyświetlenie formularza do dodawania itemu
+router.get('/events/:eventId/items/create', itemsController.getCreateItemForm);
+
+// Dodanie nowego itemu
+router.post('/events/:eventId/items/create', itemsController.createItem);
 
 
 module.exports = router;

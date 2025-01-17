@@ -1,0 +1,21 @@
+extends ../layout
+
+block content
+  .page-header
+    h1 Dodaj item do wydarzenia: #{event.title}
+
+  form(action=`/panel/events/${event.id}/items/create` method="POST" enctype="multipart/form-data")
+    // Pole dla nazwy itemu (wymagane)
+    .form-group
+      label(for="name") Nazwa: 
+      input(type="text" name="name" placeholder="Wpisz nazwę itemu" required)
+    each property, index in item_properties
+      .form-group
+        label #{property}: 
+        input(type="text" name=`item_values[${property}]` placeholder=default_values[index] value="")
+
+    .form-group
+      label(for="image") Obrazek: 
+      input(type="file" name="image" accept='image/*')
+
+    button(type="submit") Dodaj Item

@@ -130,4 +130,4 @@ class ItemRating(models.Model):
         unique_together = ('user', 'item')
 
     def __str__(self):
-        return f"Rating by {self.user.username} for {self.item.nazwa}"
+        return f"Rating by {self.user.username} for {self.item.name}"
