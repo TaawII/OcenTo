@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Text, View, StyleSheet, Button } from "react-native";
+import { Text, View, StyleSheet, Button, Alert } from "react-native";
 import { CameraView, Camera } from "expo-camera";
+import { joinEvent, isPermissionToShowItems } from '../api/events';
+import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { RootStackParamList } from "../App";
+
+type NavigationProp = StackNavigationProp<RootStackParamList, "Items">;
 
 export default function QRScanner() {
+    const navigation = useNavigation<NavigationProp>();
     const [hasPermission, setHasPermission] = useState<boolean | null>(null);
     const [scanned, setScanned] = useState(false);
 
@@ -15,12 +22,32 @@ export default function QRScanner() {
         getCameraPermissions();
     }, []);
 
-    const handleBarcodeScanned = ({ type, data }: { type: string; data: string }) => {
-        setScanned(true);
-        if (data == "test") {
-            alert(`Pomyślnie dołączyłeś do pokoju`);
+      const checkPermissions = async (data: any) => {
+        const isPermissions = await isPermissionToShowItems(data.id);
+        if (isPermissions === true) {
+          navigation.navigate("Items", { eventId: data.id });
+        } else if (isPermissions === false) {
+            const isJoin = await joinEvent(data.id, data.password);
+            if (isJoin.success === true) {
+                navigation.navigate("Items", { eventId: data.id });
+            }
         } else {
-            alert(`Niepoprawny kod qr`);
+          Alert.alert('Błąd', 'Wystąpił nieznany problem, spróbuj ponownie za chwile.');
+        }
+      };
+
+    const handleBarcodeScanned = async ({ type, data }: { type: string; data: string }) => {
+        setScanned(true);
+        try {
+            const dataParse = JSON.parse(data);
+            if (dataParse.id !== undefined && dataParse.password !== undefined) {
+                checkPermissions(dataParse)
+            } else {
+                Alert.alert(`Niepoprawny kod qr`);
+            }
+        } catch (error) {
+            console.error('Błąd parsowania JSON:', error);
+            Alert.alert('Niepoprawny kod QR');
         }
     };
 

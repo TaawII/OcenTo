@@ -90,12 +90,6 @@ class Event(models.Model):
     categories = models.JSONField(validators=[validate_categories])
     image = models.BinaryField(blank=True, null=True)
 
-    # def save(self, *args, **kwargs):
-    #     # Szyfruj hasło przed zapisem
-    #     if self.password:
-    #         self.password = encrypt_password(self.password)
-    #     super().save(*args, **kwargs)
-
     def get_password_decrypted(self):
         # Odszyfruj hasło przy odczycie
         if self.password:
@@ -106,13 +100,13 @@ class Event(models.Model):
 
 class Item(models.Model):
     id = models.AutoField(primary_key=True)
-    nazwa = models.CharField(max_length=255, unique=True)
+    name = models.CharField(max_length=255, unique=True)
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='items')
     item_values = models.JSONField(help_text='Wartości odpowiadające kluczowi w event.')
     image = models.BinaryField(blank=True, null=True)
 
     def __str__(self):
-        return self.nazwa
+        return self.name
 
 
 class EventMember(models.Model):
