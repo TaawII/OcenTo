@@ -60,12 +60,12 @@ class OwnerEventSerializer(serializers.ModelSerializer):
             'status', 'start_time', 'end_time', 'is_private', 'password', 'categories', 'member_count', 'image'
         ]
 
-class ItemSerializer(serializers.ModelSerializer):
-    event = serializers.StringRelatedField()
+# class ItemSerializer(serializers.ModelSerializer):
+#     event = serializers.StringRelatedField()
 
-    class Meta:
-        model = Item
-        fields = ['id', 'nazwa', 'event', 'item_values', 'image']
+#     class Meta:
+#         model = Item
+#         fields = ['id', 'nazwa', 'event', 'item_values', 'image']
 
 
 class EventMemberSerializer(serializers.ModelSerializer):
@@ -121,7 +121,7 @@ class MobileItemEventSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Item
-        fields = ['id', 'nazwa', 'item_values', 'image', 'average_rating']
+        fields = ['id', 'name', 'item_values', 'image', 'average_rating']
 
     def get_average_rating(self, obj):
         event = obj.event
@@ -145,7 +145,7 @@ class ItemDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Item
-        fields = ['id', 'nazwa', 'item_values', 'image', 'average_rating', 'vote_count']
+        fields = ['id', 'name', 'item_values', 'image', 'average_rating', 'vote_count']
 
     def get_average_rating(self, obj):
         event = obj.event
@@ -176,3 +176,16 @@ class ItemRatingDetailSerializer(serializers.ModelSerializer):
         if event.status in ["End", "ActiveWithRanking"]:
             return obj.rating_value
         return None
+
+class ItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Item
+        fields = ['id', 'name', 'item_values', 'event', 'image']
+
+    # Walidacja danych 'item_values'
+    def validate_item_values(self, value):
+        # Zapewnia, że 'item_values' jest listą odpowiadającą 'item_properties'
+        if not isinstance(value, list):
+            raise serializers.ValidationError('Item values must be a list.')
+
+        return value
