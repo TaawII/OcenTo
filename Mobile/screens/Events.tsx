@@ -30,6 +30,7 @@ export default function EventList() {
         try {
           const result = await getEvents();
           setEvents(result);
+
           const category = ['Wszystkie', ...new Set(result.flatMap(event => event.categories))];
           setCategoryList(category);
         } catch (error) {
@@ -42,6 +43,14 @@ export default function EventList() {
       load();
     }, [])
   );
+
+  const formatDate = (isoDate: any) => {
+    const date = new Date(isoDate);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Miesiące są liczone od 0
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
 
   const getFilteredEvents = () => {
     let filtered = events;
@@ -103,7 +112,7 @@ export default function EventList() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.filterRow}>
         <View style={styles.filterGroup}>
           <Text style={styles.filterLabel}>Dostępność</Text>
@@ -186,7 +195,7 @@ export default function EventList() {
           </View>
         </Modal>
 
-        <Text style={styles.header}>Lista wydarzeń</Text>
+        {/* <Text style={styles.header}>Lista wydarzeń</Text> */}
         {filteredEvents.map((item) => (
           <TouchableOpacity key={item.id} onPress={() => checkPermissions(item)}>
             <View style={styles.eventCard}>
@@ -195,14 +204,14 @@ export default function EventList() {
                   <Text style={styles.lockIcon}>🔒</Text>
                 </View>
               )}
-              <Image 
-                source={{ uri: `data:image/png;base64,${item.image}` }} 
-                style={styles.eventImage} 
-              />
+                <Image
+                  source={{ uri: `data:image/png;base64,${item.image}` }}
+                  style={styles.eventImage}
+                />
               <View style={styles.eventDetails}>
                 <Text style={styles.eventTitle}>{item.title}</Text>
-                <Text style={styles.eventDate}>Rozpoczęcie: {item.start_time}</Text>
-                <Text style={styles.eventDate}>Zakończenie: {item.end_time}</Text>
+                <Text style={styles.eventDate}>Rozpoczęcie: {formatDate(item.start_time)}</Text>
+                <Text style={styles.eventDate}>Zakończenie: {formatDate(item.end_time)}</Text>
                 <Text style={styles.eventDescription}>Zarządca: {item.owner}</Text>
                 <Text style={styles.peopleCount}>Ilość uczestników: {item.member_count}</Text>
               </View>
@@ -210,7 +219,7 @@ export default function EventList() {
           </TouchableOpacity>
         ))}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -303,7 +312,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 10,
-    marginBottom: 20,
+    marginBottom: 10,
+    marginTop: 10,
   },
   filterGroup: {
     flex: 1,
@@ -387,9 +397,11 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   eventImage: {
-    width: 120,
-    height: 120,
+    alignSelf: 'center',
+    width: 150,
     borderRadius: 8,
+    aspectRatio: 1,
+    resizeMode: 'contain',
   },
   eventDetails: {
     flex: 1,
@@ -399,6 +411,7 @@ const styles = StyleSheet.create({
   eventTitle: {
     fontSize: 18,
     fontWeight: 'bold',
+    paddingRight: 20,
   },
   lockContainer: {
     position: 'absolute',

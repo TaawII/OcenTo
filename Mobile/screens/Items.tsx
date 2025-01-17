@@ -42,9 +42,9 @@ export default function EventList() {
     const sortedItems = [...itemsList.items].sort((a, b) => {
       if (by === 'name') {
         if (order === 'asc') {
-          return a.nazwa.localeCompare(b.nazwa);
+          return a.name.localeCompare(b.name);
         } else {
-          return b.nazwa.localeCompare(a.nazwa);
+          return b.name.localeCompare(a.name);
         }
       } else {
         if (order === 'asc') {
@@ -80,7 +80,7 @@ export default function EventList() {
 
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView>
         {!loading && itemsList && itemsList.items.length > 0 && (
           <TouchableOpacity style={styles.sortButton} onPress={toggleModal}>
@@ -104,7 +104,7 @@ export default function EventList() {
               <TouchableOpacity onPress={() => { sortItems('desc', 'name'); toggleModal(); }}>
                 <Text style={[styles.modalOption, sortOrder === 'desc' && sortBy === 'name' && styles.selectedOption]}>Sortuj malejąco po nazwie</Text>
               </TouchableOpacity>
-              {itemsList && itemsList.status === "END" && (
+              {itemsList && ["END", "ActiveWithRanking"].includes(itemsList.status) && (
                 <>
                   <TouchableOpacity onPress={() => { sortItems('asc', 'rating'); toggleModal(); }}>
                     <Text style={[styles.modalOption, sortOrder === 'asc' && sortBy === 'rating' && styles.selectedOption]}>Sortuj rosnąco po ocenie</Text>
@@ -125,7 +125,7 @@ export default function EventList() {
           <Text style={styles.header}>{itemsList.title}</Text>
         )}
         {itemsList.items.length === 0 ? (
-          <Text style={styles.noDataText}>To wydarzenie wydaje się być puste :o</Text>
+          <Text style={styles.noDataText}>To wydarzenie wydaje się być puste 😢</Text>
         ) : (
           itemsList.items.map((item: any) => {
             return (
@@ -139,7 +139,7 @@ export default function EventList() {
                     style={styles.eventImage}
                   />
                   <View style={styles.eventDetails}>
-                    <Text style={styles.eventTitle}>{item.nazwa}</Text>
+                    <Text style={styles.eventTitle}>{item.name}</Text>
                     {item.item_values.map((value: any, index: number) => {
                       const property = value || itemsList.default_values[index];
                       return (
@@ -148,7 +148,7 @@ export default function EventList() {
                         </Text>
                       );
                     })}
-                    {itemsList.status === "End" || itemsList.status === "ActiveWithRanking" ? (
+                    {itemsList && ["END", "ActiveWithRanking"].includes(itemsList.status) && (
                       <Text style={styles.eventDate}>Średnia ocena: {item.average_rating || 0}</Text>
                       // <Rating
                       //   ratingCount={5}
@@ -157,7 +157,7 @@ export default function EventList() {
                       //   fractions={1}
                       //   readonly={true}
                       // />
-                    ) : null}
+                    )}
                   </View>
                 </View>
               </TouchableOpacity>
@@ -165,7 +165,7 @@ export default function EventList() {
           })
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -180,7 +180,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#0066cc',
     borderRadius: 8,
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 10,
+    marginTop: 10,
     alignSelf: 'center',
   },
   sortButtonText: {
@@ -240,9 +241,11 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   eventImage: {
+    alignSelf: 'center',
     width: 120,
-    height: 120,
     borderRadius: 8,
+    aspectRatio: 1,
+    resizeMode: 'contain',
   },
   eventDetails: {
     flex: 1,

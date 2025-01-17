@@ -3,6 +3,7 @@ const fs = require('fs');
 const axios = require('axios');
 const { encryptPassword } = require('../utils/encryption');
 const { decryptPassword } = require('../utils/encryption');
+const QRCode = require('qrcode');
 
 exports.getEvent = async (req, res) => {
   const { id } = req.params;
@@ -43,8 +44,14 @@ exports.getEvent = async (req, res) => {
     response.data.start_time = formatDate(response.data.start_time);
     response.data.end_time = formatDate(response.data.end_time);
 
+    const qrData = {
+      id:id,
+      password:response.data.password,
+    }
+    const QRJsonString = JSON.stringify(qrData);
+    const qrCode = await QRCode.toDataURL(QRJsonString);
 
-    res.render('panel/event-detail', { event: response.data });
+    res.render('panel/event-detail', { event: response.data, qrCode });
   } catch (error) {
     console.error(error.response?.data);
     console.error(error.response?.status);
@@ -153,6 +160,7 @@ exports.renderCreateEvent = (req, res) => {
   res.render('events/create', { error: null });
 };
 exports.submitEvent = async (req, res) => {
+  const serverURL = process.env.serwerURL;
   try {
     let imageBase64 = req.file? req.file.buffer.toString('base64'):null;
     const isPrivate = req.body.is_private === 'on' ? true : false; // Sprawdzamy, czy checkbox jest zaznaczony
@@ -172,9 +180,9 @@ exports.submitEvent = async (req, res) => {
     categories = [categories];
   }
   let password = req.body.password || null;
-    if (password) {
-      password = encryptPassword(password); // Szyfruj hasło przed wysłaniem
-    }
+    // if (password) {
+    //   password = encryptPassword(password); // Szyfruj hasło przed wysłaniem
+    // }
     const formData = {
       title: req.body.title,
       item_properties: item_properties || [], 
@@ -191,7 +199,7 @@ exports.submitEvent = async (req, res) => {
     const token = req.cookies.auth_token;
     console.log(token);
     // Przesyłanie danych do Django
-    const response = await axios.post('http://127.0.0.1:8000/api/events/create', formData, {
+    const response = await axios.post(`http://${serverURL}/create`, formData, {
       headers: {
         'Authorization': `Bearer ${token}`,
       }

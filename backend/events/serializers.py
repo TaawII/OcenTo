@@ -60,13 +60,12 @@ class OwnerEventSerializer(serializers.ModelSerializer):
             'status', 'start_time', 'end_time', 'is_private', 'password', 'categories', 'member_count', 'image'
         ]
 
-# class ItemSerializer(serializers.ModelSerializer):
-#     event = serializers.StringRelatedField()
+class ItemSerializer(serializers.ModelSerializer):
+    event = serializers.StringRelatedField()
 
-#     class Meta:
-#         model = Item
-#         fields = ['id', 'nazwa', 'event', 'item_values', 'image']
-
+    class Meta:
+        model = Item
+        fields = ['id', 'name', 'event', 'item_values', 'image']
 
 class EventMemberSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField()
@@ -118,14 +117,14 @@ class EventEditSerializer(serializers.ModelSerializer):
 
 class MobileItemEventSerializer(serializers.ModelSerializer):
     average_rating = serializers.SerializerMethodField()
-
+    
     class Meta:
         model = Item
         fields = ['id', 'name', 'item_values', 'image', 'average_rating']
 
     def get_average_rating(self, obj):
         event = obj.event
-        if event.status == "END":
+        if event.status in ["End", "ActiveWithRanking"]:
             average_rating = ItemRating.objects.filter(item=obj).aggregate(Avg('rating_value'))['rating_value__avg']
             logger.debug(f"Średnia ocena dla obiektu {obj.id}: {average_rating}")
             return average_rating if average_rating is not None else 0.0

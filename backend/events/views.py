@@ -12,6 +12,7 @@ from .models import User, Event, Item, ItemRating
 from .serializers import MobileEventSerializer, OwnerEventSerializer, EventSerializer, ItemSerializer, EventMember, MobileEventItemSerializer, ItemRatingSerializer, ItemDetailSerializer, ItemRatingDetailSerializer, EventEditSerializer
 from rest_framework.authentication import get_authorization_header
 from io import BytesIO
+from .encryption import decrypt_password, encrypt_password
 
 logger = logging.getLogger(__name__)
 
@@ -101,6 +102,7 @@ class CreateEventView(APIView):
                 except Exception as e:
                     return Response({'error': f'Błąd przy dekodowaniu obrazu: {str(e)}'}, status=400)
             # Tworzenie nowego wydarzenia
+            password = encrypt_password(data.get('password'))
             event = Event.objects.create(
                 title=data.get('title'),
                 item_properties=data.get('item_properties'),
@@ -110,7 +112,7 @@ class CreateEventView(APIView):
                 start_time=data.get('start_time'),
                 end_time=data.get('end_time'),
                 is_private=data.get('is_private', False),
-                password=data.get('password'),
+                password=password,
                 categories=data.get('categories'),
                 image=image_binary
             )
@@ -143,8 +145,6 @@ class EventEditView(APIView):
         image_data = data.get('image', None)
 
         if image_data:
-            print("Received image (base64):", image_data[:100])  # Wypisujemy początek obrazu, by nie zaśmiecać konsoli
-
             try:
                 # Sprawdź, czy dane zawierają prefiks "data:image/jpeg;base64,"
                 if image_data.startswith("data:image/jpeg;base64,"):
@@ -207,7 +207,7 @@ class JoinEventView(APIView):
         event = Event.objects.get(id = event_id)
 
         if event.is_private:
-            if not password == event.password:
+            if not password == decrypt_password(event.password):
                 return Response({'success': False, 'message': 'Błędne hasło.'}, status=status.HTTP_200_OK)
 
         is_member = EventMember.objects.filter(user_id=user_id, event_id=event_id).exists()
@@ -249,7 +249,11 @@ class MobileItemDetailsView(APIView):
         user_rating = ItemRating.objects.filter(item_id=item_id, user_id=user_id).first()
         user_rating_data = ItemRatingSerializer(user_rating).data if user_rating else None
 
-        rating = [item_data, ratings_data, user_rating_data]
+        event = item.event
+        item_properties = event.item_properties if hasattr(event, 'item_properties') else None
+        default_values = event.default_values if hasattr(event, 'default_values') else None
+
+        rating = [item_data, ratings_data, item_properties, default_values, user_rating_data]
         
         return Response({'success': True, 'data': rating}, status=status.HTTP_200_OK)
 

@@ -90,12 +90,6 @@ class Event(models.Model):
     categories = models.JSONField(validators=[validate_categories])
     image = models.BinaryField(blank=True, null=True)
 
-    # def save(self, *args, **kwargs):
-    #     # Szyfruj hasło przed zapisem
-    #     if self.password:
-    #         self.password = encrypt_password(self.password)
-    #     super().save(*args, **kwargs)
-
     def get_password_decrypted(self):
         # Odszyfruj hasło przy odczycie
         if self.password:
