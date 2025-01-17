@@ -1,6 +1,9 @@
 from django.contrib.auth.hashers import make_password, check_password
+from rest_framework.generics import ListCreateAPIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -9,7 +12,7 @@ from django.db.models import Count
 from django.shortcuts import get_object_or_404
 import logging, base64
 from .models import User, Event, Item, ItemRating
-from .serializers import MobileEventSerializer, OwnerEventSerializer, EventSerializer, ItemSerializer, EventMember, MobileEventItemSerializer, ItemRatingSerializer, ItemDetailSerializer, ItemRatingDetailSerializer, EventEditSerializer
+from .serializers import MobileEventSerializer, OwnerEventSerializer, EventSerializer, ItemSerializer, EventMember, MobileEventItemSerializer, ItemRatingSerializer, ItemDetailSerializer, ItemRatingDetailSerializer, EventEditSerializer, AdminItemRatingSerializer
 from rest_framework.authentication import get_authorization_header
 from io import BytesIO
 
@@ -126,7 +129,7 @@ class EventDetailView(APIView):
 
     def get(self, request, pk):
         event = get_object_or_404(Event, pk=pk)
-        if event.owner != request.user:
+        if event.owner != request.user and request.user.role != 'admin':  # Sprawdź, czy użytkownik jest adminem
             return Response({"error": "You are not authorized to view this event."}, status=status.HTTP_403_FORBIDDEN)
         serializer = EventSerializer(event)
         return Response(serializer.data)
@@ -288,3 +291,63 @@ class UserEventsView(APIView):
         serializer = EventSerializer(events, many=True)
         return Response(serializer.data)
 
+class IsAdminUser(BasePermission):
+    def has_permission(self, request, view):
+        # Sprawdź, czy użytkownik jest zalogowany i ma rolę 'admin'
+        return request.user.is_authenticated and request.user.role == 'admin'
+
+class AdminEventsListView(APIView):
+    authentication_classes = [JWTAuthentication]  # Dodaj obsługę tokenów JWT
+    permission_classes = [IsAdminUser]  # Wymuś rolę 'admin'
+
+    def get(self, request):
+        # Weryfikacja roli użytkownika
+        print(f"Authorization Header: {request.headers.get('Authorization')}")
+        if not request.user.is_authenticated or request.user.role != 'admin':
+            raise PermissionDenied("Brak dostępu. Tylko administratorzy mogą wyświetlać tę listę.")
+
+        # Pobranie wszystkich eventów
+        events = Event.objects.all()
+        serializer = EventSerializer(events, many=True)
+        return Response(serializer.data)
+
+class EventItemsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        """
+        Wyświetla wszystkie przedmioty przypisane do konkretnego wydarzenia.
+        """
+        # Pobranie wydarzenia lub zwrócenie 404, jeśli nie istnieje
+        event = get_object_or_404(Event, id=pk)
+
+        # Sprawdzenie, czy użytkownik ma dostęp do wydarzenia
+        if event.owner != request.user and request.user.role != 'admin':
+            return Response(
+                {"error": "You are not authorized to view the items of this event."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Pobranie wszystkich przedmiotów związanych z wydarzeniem
+        items = Item.objects.filter(event=event)
+        serialized_items = ItemSerializer(items, many=True).data
+
+        # Dodanie default_values do odpowiedzi
+        response_data = {
+            "items": serialized_items,
+            "default_values": event.default_values,
+            "item_properties": event.item_properties
+        }
+        print(event.default_values)
+        return Response(response_data)
+
+class AdminItemRatingsView(APIView):
+    permission_classes = [IsAdminUser]  # Dostęp tylko dla administratora
+
+    def get(self, request, pk, item_id):
+        """
+        Pobiera oceny i komentarze dla danego przedmiotu w konkretnym wydarzeniu.
+        """
+        ratings = ItemRating.objects.filter(item__id=item_id, item__event__id=pk)
+        serializer = AdminItemRatingSerializer(ratings, many=True)
+        return Response(serializer.data)

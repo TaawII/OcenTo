@@ -65,7 +65,13 @@ class ItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Item
-        fields = ['id', 'nazwa', 'event', 'item_values', 'image']
+        fields = ['id', 'name', 'event', 'item_values', 'image']
+
+    def get_item_values(self, obj):
+        # Jeśli item_values jest pusty, zwracamy default_values z eventu
+        if not obj.item_values or obj.item_values == "":
+            return obj.event.default_values
+        return obj.item_valuesm
 
 
 class EventMemberSerializer(serializers.ModelSerializer):
@@ -176,3 +182,11 @@ class ItemRatingDetailSerializer(serializers.ModelSerializer):
         if event.status in ["End", "ActiveWithRanking"]:
             return obj.rating_value
         return None
+
+class AdminItemRatingSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField()  # Użytkownik jako nazwa, a nie ID
+    item = serializers.StringRelatedField()  # Przedmiot jako nazwa, a nie ID
+
+    class Meta:
+        model = ItemRating
+        fields = ['user', 'item', 'rating_value', 'comment']

@@ -1,0 +1,32 @@
+extends ../layout
+
+block content
+  h1 Przedmioty dla wydarzenia #{eventId}
+
+  if items.length === 0
+    p Brak przedmiotów dla tego wydarzenia.
+  else
+    table
+      thead
+        tr
+          th ID
+          th Nazwa
+          th Wartości
+          th Obraz
+      tbody
+        each item in items
+          tr
+            td= item.id
+            td= item.name
+            td
+              ul
+                if Object.keys(item.item_values).length > 0
+                  each value, key in item.item_values
+                    li #{item_properties[key]}: #{value? value : defaultValues[key]}
+            td
+              if item.image
+                img(src=`data:image/jpeg;base64,${item.image}` alt="Obraz przedmiotu" width="100")
+              else
+                p Brak obrazu
+
+  a(href='/admin/allevents') Powrót do listy wydarzeń
