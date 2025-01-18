@@ -81,8 +81,8 @@ exports.createItem = async (req, res) => {
   
 
 exports.getEventItems = async (req, res) => {
-  const eventId = req.params.event_id;  // Zmieniona nazwa parametru zgodnie z Django ('event_id')
-  const authToken = req.cookies.auth_token;  // Token autoryzacyjny użytkownika
+  const eventId = req.params.event_id;
+  const authToken = req.cookies.auth_token;
 
   try {
     // Pobieramy dane o wydarzeniu i itemach
@@ -109,7 +109,7 @@ exports.getEventItems = async (req, res) => {
 
     // Przesyłamy dane do widoku
     res.render('items/event-items', {
-      event: { title, item_properties, default_values },
+      event: { id: eventId, title, item_properties, default_values },
       items: itemsData   // Przesyłamy listę itemów z przetworzonymi wartościami
     });
   } catch (error) {
@@ -117,3 +117,22 @@ exports.getEventItems = async (req, res) => {
     res.status(500).send('Błąd podczas pobierania itemów dla wydarzenia.');
   }
 };
+
+exports.deleteItem = async (req, res) => {
+  const { eventId, itemId } = req.params;
+  const authToken = req.cookies.auth_token;
+
+  try {
+    const response = await axios.delete(`http://${serverURL}/${eventId}/items/${itemId}/delete`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+
+    // Przekierowanie po sukcesie
+    //res.redirect(`/panel/events/${eventId}/items`);
+    res.status(200).send({ message: "Przedmiot został pomyślnie usunięty." });
+  } catch (error) {
+    //console.error(error);
+    res.status(500).send('Błąd podczas usuwania przedmiotu.');
+  }
+};
+

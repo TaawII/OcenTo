@@ -407,3 +407,23 @@ class OwnerEventItemsView(APIView):
                 'items': items_data
             }
         }, status=status.HTTP_200_OK)
+        
+        
+class OwnerDeleteItemView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, event_id, item_id):
+        # Pobierz przedmiot
+        item = get_object_or_404(Item, id=item_id)
+
+        # Sprawdź, czy przedmiot należy do danego wydarzenia
+        if item.event.id != event_id:
+            return Response({"error": "Przedmiot nie należy do tego wydarzenia."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Sprawdź, czy użytkownik jest właścicielem wydarzenia
+        if item.event.owner != request.user:
+            return Response({"error": "Nie masz uprawnień do usunięcia tego przedmiotu."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Usuń przedmiot (kaskadowo usunie powiązane elementy, np. oceny)
+        item.delete()
+        return Response({"message": "Przedmiot został usunięty pomyślnie."}, status=status.HTTP_200_OK)

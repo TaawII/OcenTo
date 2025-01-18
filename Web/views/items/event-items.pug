@@ -8,6 +8,7 @@ block content
   html
     head
       link(rel="stylesheet", href="/stylesheets/items/event-items.css")
+      script(src="/javascripts/delete-item.js")
     body
   .item-list
 
@@ -27,7 +28,7 @@ block content
 
           .item-actions
             a.btn-edit(href=`/panel/events/${event.id}/items/${item.id}/edit`) Edytuj
-            a.btn-delete(href=`/panel/events/${event.id}/items/${item.id}/delete`) Usuń
+            a.btn-delete(href="#" data-event-id=`${event.id}` data-item-id=`${item.id}`) Usuń
 
   //- Jeżeli nie ma przedmiotów
   if items.length === 0

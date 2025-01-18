@@ -24,8 +24,8 @@ router.get('/events/:eventId/items/create', itemsController.getCreateItemForm);
 // Dodanie nowego itemu
 router.post('/events/:eventId/items/create', itemsController.createItem);
 
-
-
+// Usuwanie itemu z wydarzenia
+router.delete('/events/:eventId/items/:itemId/delete', itemsController.deleteItem);
 
 module.exports = router;
 
