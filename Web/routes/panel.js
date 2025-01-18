@@ -15,11 +15,16 @@ router.get('/events/:id/edit', eventsController.renderEditForm);
 // Trasa do edytowania wydarzenia
 router.post('/events/:id/edit', eventsController.editEvent);
 
+// Trasa GET dla itemów wydarzenia
+router.get('/events/:event_id/items', itemsController.getEventItems);
+
 // Wyświetlenie formularza do dodawania itemu
 router.get('/events/:eventId/items/create', itemsController.getCreateItemForm);
 
 // Dodanie nowego itemu
 router.post('/events/:eventId/items/create', itemsController.createItem);
+
+
 
 
 module.exports = router;

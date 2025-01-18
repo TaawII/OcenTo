@@ -79,3 +79,41 @@ exports.createItem = async (req, res) => {
     }
   };
   
+
+exports.getEventItems = async (req, res) => {
+  const eventId = req.params.event_id;  // Zmieniona nazwa parametru zgodnie z Django ('event_id')
+  const authToken = req.cookies.auth_token;  // Token autoryzacyjny użytkownika
+
+  try {
+    // Pobieramy dane o wydarzeniu i itemach
+    const response = await axios.get(`http://${serverURL}/${eventId}/items/`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+
+    const { event, items } = response.data.data;  // Dane o wydarzeniu i itemach
+
+    // Rozdzielamy event na odpowiednie zmienne
+    const { title, item_properties, default_values } = event;
+
+    // Modyfikujemy itemy, aby przekazać item_values oraz domyślne wartości
+    const itemsData = items.map(item => {
+      // Mapujemy itemy, dodajemy domyślne wartości, gdy item_values są puste
+      const itemWithValues = item.item_values.map((value, index) => {
+        return value.trim() === "" && default_values[index] ? default_values[index] : value;
+      });
+      return {
+        ...item,
+        item_values: itemWithValues
+      };
+    });
+
+    // Przesyłamy dane do widoku
+    res.render('items/event-items', {
+      event: { title, item_properties, default_values },
+      items: itemsData   // Przesyłamy listę itemów z przetworzonymi wartościami
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Błąd podczas pobierania itemów dla wydarzenia.');
+  }
+};

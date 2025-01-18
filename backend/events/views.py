@@ -371,3 +371,39 @@ class AddItemToEventView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class OwnerEventItemsView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, event_id):
+        user_id = request.user.id
+
+        # Pobieramy event na podstawie event_id
+        event = get_object_or_404(Event, id=event_id)
+        
+        # Sprawdzamy, czy użytkownik jest właścicielem eventu
+        if event.owner.id != user_id:
+            return Response({"error": "Nie masz uprawnień do wyświetlenia itemów tego wydarzenia."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Pobieramy wszystkie itemy powiązane z tym eventem
+        items = Item.objects.filter(event=event)
+        
+        # Serializujemy dane itemów
+        items_data = ItemSerializer(items, many=True).data
+
+        # Przygotowujemy dane eventu, które będą zawierać item_properties i default_values
+        event_data = {
+            'title': event.title,
+            'item_properties': event.item_properties,
+            'default_values': event.default_values
+        }
+
+        # Zwracamy dane: event wraz z itemami
+        return Response({
+            'success': True, 
+            'data': {
+                'event': event_data,
+                'items': items_data
+            }
+        }, status=status.HTTP_200_OK)
