@@ -10,7 +10,6 @@ block content
       link(rel="stylesheet", href="/stylesheets/panel/event-detail/style.css")
     body
       .event-details
-        // Wyświetlanie zdjęcia pod tytułem eventu
         if event.image
           img(src=`data:image/jpeg;base64,${event.image}`, alt="Event Image", width="300")
         else
@@ -49,5 +48,6 @@ block content
 
         .links
           a.btn-back(href="/admin/allevents") Back to Events
-          a.btn-items(href=`/admin/allevents/${event.id}/items`) View Items
+          a.btn-items(href="/admin/allevents/${event.id}/items") View Items
+          a.btn-details(href=`/admin/allevents/${event.id}/items`) Pokaz przedmioty
 

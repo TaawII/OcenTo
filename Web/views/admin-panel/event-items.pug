@@ -1,32 +1,36 @@
-extends ../layout
-
-block content
-  h1 Przedmioty dla wydarzenia #{eventId}
-
-  if items.length === 0
-    p Brak przedmiotów dla tego wydarzenia.
-  else
-    table
-      thead
+h1 Przedmioty dla wydarzenia #{eventId}
+p Event ID: #{eventId}
+p Item ID: #{itemId}
+if items.length === 0
+  p Brak przedmiotów dla tego wydarzenia.
+else
+  table
+    thead
+      tr
+        th ID
+        th Nazwa
+        th Wartości
+        th Obraz
+        th Akcja
+    tbody
+      each item in items
         tr
-          th ID
-          th Nazwa
-          th Wartości
-          th Obraz
-      tbody
-        each item in items
-          tr
-            td= item.id
-            td= item.name
-            td
-              ul
-                if Object.keys(item.item_values).length > 0
-                  each value, key in item.item_values
-                    li #{item_properties[key]}: #{value? value : defaultValues[key]}
-            td
-              if item.image
-                img(src=`data:image/jpeg;base64,${item.image}` alt="Obraz przedmiotu" width="100")
+          td= item.id
+          td= item.name
+          td
+            ul
+              if Object.keys(item.item_values).length > 0
+                each value, key in item.item_values
+                  li #{item_properties[key]}: #{value || defaultValues[key]}
               else
-                p Brak obrazu
+                li Brak wartości
+          td
+            if item.image
+              img(src=`data:image/jpeg;base64,${item.image}` alt="Obraz przedmiotu" width="100")
+            else
+              p Brak obrazu
+          td
+            form(method="post", action=`/admin/allevents/${eventId}/items/${item.id}?_method=DELETE`)
+              button(type="submit" class="btn btn-danger") Usuń
 
-  a(href='/admin/allevents') Powrót do listy wydarzeń
+a(href='/admin/allevents') Powrót do listy wydarzeń

@@ -24,6 +24,8 @@ block content
           td #{event.end_time}
           td 
             a.btn-details(href=`/admin/allevents/${event.id}`) Szczegóły
+             form(method="post", action=`/admin/allevents/${event.id}?_method=DELETE`)
+              button(type="submit") Usuń
   //- Jeżeli nie ma wydarzeń
   if events.length === 0
     p Nie żadnych wydarzeń.

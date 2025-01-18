@@ -151,7 +151,7 @@ class ItemDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Item
-        fields = ['id', 'nazwa', 'item_values', 'image', 'average_rating', 'vote_count']
+        fields = ['id', 'name', 'item_values', 'image', 'average_rating', 'vote_count']
 
     def get_average_rating(self, obj):
         event = obj.event
@@ -184,9 +184,9 @@ class ItemRatingDetailSerializer(serializers.ModelSerializer):
         return None
 
 class AdminItemRatingSerializer(serializers.ModelSerializer):
-    user = serializers.StringRelatedField()  # Użytkownik jako nazwa, a nie ID
-    item = serializers.StringRelatedField()  # Przedmiot jako nazwa, a nie ID
+    user = serializers.StringRelatedField()
+    item = serializers.StringRelatedField()
 
     class Meta:
         model = ItemRating
-        fields = ['user', 'item', 'rating_value', 'comment']
+        fields = ['id', 'user', 'item', 'rating_value', 'comment']

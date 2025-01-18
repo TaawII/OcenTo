@@ -2,11 +2,11 @@ const axios = require('axios');
 
 exports.getAllEvents = async (req, res) => {
   try {
-    const response = await axios.get(`http://127.0.0.1:8000/api/events/admin/events`, {
+    const response = await axios.get(`http://127.0.0.1:8000/api/events/admin/allevents`, {
       headers: {
         Authorization: `Bearer ${req.user.token}`, 
       },
-    });
+    }); console.log(req.user.token);
     res.render('allevents', { events: response.data }); 
   } catch (error) {
     console.error('Błąd podczas pobierania wydarzeń:', error.message);
@@ -111,5 +111,73 @@ exports.getItemRatings = async (req, res) => {
           return res.status(403).send('Brak dostępu.');
       }
       res.status(500).send('Błąd podczas pobierania ocen.');
+  }
+};
+exports.deleteEvent = async (req, res) => {
+  const { id } = req.params; // ID wydarzenia
+  const serverURL = process.env.SERVER_URL || 'http://127.0.0.1:8000'; 
+  const authToken = req.cookies.auth_token; 
+
+  try {
+    const response = await axios.delete(`${serverURL}/api/events/admin/allevents/${id}/delete/`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+
+    res.status(200).send({ message: response.data.message });
+  } catch (error) {
+    console.error('Error deleting event:', error.message);
+    if (error.response?.status === 403) {
+      return res.status(403).send('You are not authorized to delete this event.');
+    } else if (error.response?.status === 404) {
+      return res.status(404).send('Event not found.');
+    }
+    res.status(500).send('Error deleting event.');
+  }
+};
+
+exports.deleteItem = async (req, res) => {
+  const { eventId, itemId } = req.params;
+  const serverURL = process.env.SERVER_URL || 'http://127.0.0.1:8000'; 
+  const authToken = req.cookies.auth_token; 
+
+  try {
+    const response = await axios.delete(`${serverURL}/api/events/admin/allevents/${eventId}/items/${itemId}/delete/`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+
+    res.status(200).send({ message: response.data.message });
+  } catch (error) {
+    console.error('Error deleting event:', error.message);
+    if (error.response?.status === 403) {
+      return res.status(403).send('You are not authorized to delete this event.');
+    } else if (error.response?.status === 404) {
+      return res.status(404).send('Event not found.');
+    }
+    res.status(500).send('Error deleting event.');
+  }
+};
+
+exports.deleteRatingAndComment = async (req, res) => {
+  const { eventId, itemId, ratingId } = req.params; L
+  const serverURL = process.env.SERVER_URL || 'http://127.0.0.1:8000'; 
+  const authToken = req.cookies.auth_token; 
+
+  try {
+    const response = await axios.delete(
+      `${serverURL}/api/events/admin/allevents/${eventId}/items/${itemId}/ratings/${ratingId}/delete/`,
+      {
+        headers: { Authorization: `Bearer ${authToken}` },
+      }
+    );
+
+    res.status(200).send({ message: response.data.message }); 
+  } catch (error) {
+    console.error('Error deleting rating and comment:', error.message);
+    if (error.response?.status === 403) {
+      return res.status(403).send('You are not authorized to delete this rating and comment.');
+    } else if (error.response?.status === 404) {
+      return res.status(404).send('Rating and comment not found.');
+    }
+    res.status(500).send('Error deleting rating and comment.');
   }
 };

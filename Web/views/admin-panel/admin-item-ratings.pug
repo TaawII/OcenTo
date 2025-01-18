@@ -9,14 +9,20 @@ block content
     table
       thead
         tr
+          th ID
           th Użytkownik
           th Ocena
           th Komentarz
       tbody
         each rating in ratings
           tr
+            td= rating.id
             td= rating.user
             td= rating.rating_value
             td= rating.comment
+            td
+              form(method="post", action=`/admin/allevents/${eventId}/items/${itemId}/ratings/${rating.id}?_method=DELETE`)
+                button(type="submit" class="btn btn-danger") Usuń
+
 
   a(href=`/admin/allevents/${eventId}/items`) Powrót do listy przedmiotów
