@@ -72,7 +72,7 @@ exports.createItem = async (req, res) => {
       });
   
       // Zwracamy odpowiedź, możemy przekierować użytkownika po sukcesie
-      res.redirect(`/panel/events/${eventId}`);
+      res.redirect(`/panel/events/${eventId}/items`);
     } catch (error) {
       //console.error(error);
       res.status(500).send('Error adding item – the item with this name may already exist in the database.');
@@ -136,3 +136,69 @@ exports.deleteItem = async (req, res) => {
   }
 };
 
+
+exports.getEditItemForm = async (req, res) => {
+  const { eventId, itemId } = req.params;
+  const authToken = req.cookies.auth_token;
+
+  try {
+    // Pobierz dane itemu z API Django
+    const itemResponse = await axios.get(`http://${serverURL}/${eventId}/items/${itemId}/edit`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+
+    // Pobierz dane wydarzenia, aby uzyskać item_properties
+    const eventResponse = await axios.get(`http://${serverURL}/events/${eventId}/`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+
+    const item = itemResponse.data;
+    const { item_properties, default_values } = eventResponse.data;
+
+    // Przekaż dane do widoku
+    res.render('items/edit-item', {
+      item,
+      itemProperties: item_properties, // Etykiety pól
+      defaultValues: default_values,   // Domyślne wartości
+    });
+  } catch (error) {
+    console.error('Błąd podczas pobierania danych itemu lub eventu:', error.response?.data || error.message);
+    res.status(500).send('Nie udało się załadować danych.');
+  }
+};
+
+exports.editItem = async (req, res) => {
+  const { eventId, itemId } = req.params;
+  const authToken = req.cookies.auth_token;
+
+  // Przetwarzanie obrazu, jeśli został przesłany
+  const imageFile = req.file ? req.file.buffer.toString('base64') : null;
+
+  if (imageFile) {
+    console.log('Image file (base64 encoded):', imageFile.substring(0, 100)); // Logujemy tylko fragment base64
+  } else {
+    console.log('No image uploaded');
+  }
+
+  // Przygotowanie danych do wysłania
+  const itemData = {
+    ...req.body,
+    image: imageFile, // Dodajemy obraz w formacie base64
+  };
+
+  try {
+    // Wysyłamy dane do API Django
+    await axios.put(`http://${serverURL}/${eventId}/items/${itemId}/edit`, itemData, {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    // Przekierowanie po zapisaniu zmian
+    res.redirect(`/panel/events/${eventId}/items`);
+  } catch (error) {
+    console.error('Błąd podczas zapisywania itemu:', error.response?.data || error.message);
+    res.status(500).send('Nie udało się zapisać zmian.');
+  }
+};

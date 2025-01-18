@@ -51,6 +51,12 @@
     margin: 5px 0;
     color: #555;
   }
+
+  /* Pogrubienie etykiet w li */
+  .item-info li strong {
+    font-weight: bold; /* Pogrubienie tekstu */
+    color: #333; /* Opcjonalnie ciemniejszy kolor dla większej widoczności */
+  }
   
   /* Przyciski akcji */
   .item-actions {
@@ -58,7 +64,7 @@
     padding: 10px 15px;
     background-color: #f9f9f9;
     border-top: 1px solid #ddd;
-    text-align: right;
+    text-align: center;
   }
   
   .item-actions a {
@@ -73,13 +79,13 @@
   }
   
   /* Stylowanie przycisku "Edytuj" */
-  .item-actions a.btn-edit {
+  .item-actions a.btn-reviews {
     background-color: #4caf50; /* Zielony kolor */
     color: white;
     border: 1px solid #4caf50;
   }
   
-  .item-actions a.btn-edit:hover {
+  .item-actions a.btn-reviews:hover {
     background-color: #45a049; /* Ciemniejszy zielony przy najechaniu */
     border-color: #45a049;
   }
@@ -96,15 +102,52 @@
     border-color: #e53935;
   }
   
-  /* Stylowanie przycisku "Statystyki" (opcjonalnie, jeśli dodasz więcej przycisków) */
-  .item-actions a.btn-stats {
-    background-color: #2196f3; /* Niebieski kolor */
-    color: white;
-    border: 1px solid #2196f3;
-  }
-  
-  .item-actions a.btn-stats:hover {
-    background-color: #1976d2; /* Ciemniejszy niebieski przy najechaniu */
-    border-color: #1976d2;
-  }
-  
+/* Stylowanie przycisku "Oceny i komentarze" */
+.item-actions a.btn-edit {
+  background-color: #FFC107; /* Żółty kolor */
+  color: white;
+  border: 1px solid #FFC107;
+}
+
+.item-actions a.btn-edit:hover {
+  background-color: #FFB300; /* Ciemniejszy żółty przy najechaniu */
+  border-color: #FFB300;
+}  
+
+/* Nagłówek na górze strony */
+.page-header {
+  text-align: center;
+  /* margin-bottom: 20px; */
+  margin: 20px 0 20px; /* Dodany odstęp od góry i dołu */
+}
+
+.page-header h2 {
+  font-size: 30px;
+  color: #333;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 2px solid #4CAF50;
+  display: inline-block;
+  padding-bottom: 5px;
+  margin: 0 auto 0px; /* Dodany odstęp pod nagłówkiem */
+}
+
+/* Przycisk "Dodaj przedmiot" */
+.btn-add-item {
+  display: inline-block;
+  margin-top: 10px;
+  background-color: #4CAF50; /* Zielony kolor */
+  color: white;
+  padding: 10px 15px;
+  font-size: 16px;
+  font-weight: bold;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.btn-add-item:hover {
+  background-color: #45a049; /* Ciemniejszy zielony przy hover */
+}

@@ -13,7 +13,7 @@ from .serializers import MobileEventSerializer, OwnerEventSerializer, EventSeria
 from rest_framework.authentication import get_authorization_header
 from io import BytesIO
 from .encryption import decrypt_password, encrypt_password
-
+from django.core.exceptions import ValidationError
 logger = logging.getLogger(__name__)
 
 class RegisterView(APIView):
@@ -406,8 +406,7 @@ class OwnerEventItemsView(APIView):
                 'event': event_data,
                 'items': items_data
             }
-        }, status=status.HTTP_200_OK)
-        
+        }, status=status.HTTP_200_OK) 
         
 class OwnerDeleteItemView(APIView):
     permission_classes = [IsAuthenticated]
@@ -427,3 +426,53 @@ class OwnerDeleteItemView(APIView):
         # Usuń przedmiot (kaskadowo usunie powiązane elementy, np. oceny)
         item.delete()
         return Response({"message": "Przedmiot został usunięty pomyślnie."}, status=status.HTTP_200_OK)
+
+class ItemEditView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, event_id, item_id):
+        # Sprawdź, czy event istnieje i należy do użytkownika
+        event = get_object_or_404(Event, id=event_id, owner=request.user)
+
+        # Sprawdź, czy przedmiot należy do tego eventu
+        item = get_object_or_404(Item, id=item_id, event=event)
+
+        # Serializuj dane przedmiotu
+        serializer = ItemSerializer(item)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+    def put(self, request, event_id, item_id):
+        # Sprawdź, czy event istnieje i należy do użytkownika
+        event = get_object_or_404(Event, id=event_id, owner=request.user)
+
+        # Sprawdź, czy przedmiot należy do tego eventu
+        item = get_object_or_404(Item, id=item_id, event=event)
+
+        data = request.data
+        image_data = data.get('image', None)
+
+        # Obsługa obrazu
+        if image_data:
+            try:
+                # Sprawdź, czy dane zawierają prefiks "data:image/jpeg;base64,"
+                if image_data.startswith("data:image/"):
+                    # Usunięcie prefiksu
+                    image_data = image_data.split(",")[1]
+
+                # Dekodowanie danych base64 na format binarny
+                image_binary = base64.b64decode(image_data)
+
+                # Zapisz obraz w przedmiocie
+                item.image = image_binary
+            except (ValueError, ValidationError) as e:
+                print(f"Error decoding image: {e}")
+                return Response({"error": "Invalid image data"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Serializacja i zapis danych
+        serializer = ItemSerializer(item, data=data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

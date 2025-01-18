@@ -24,6 +24,12 @@ router.get('/events/:eventId/items/create', itemsController.getCreateItemForm);
 // Dodanie nowego itemu
 router.post('/events/:eventId/items/create', itemsController.createItem);
 
+// Wyświetlenie formularza edycji dla danego itemu
+router.get('/events/:eventId/items/:itemId/edit', itemsController.getEditItemForm);
+
+// Zapisanie zmian w danym itemie
+router.post('/events/:eventId/items/:itemId/edit', itemsController.editItem);
+
 // Usuwanie itemu z wydarzenia
 router.delete('/events/:eventId/items/:itemId/delete', itemsController.deleteItem);
 

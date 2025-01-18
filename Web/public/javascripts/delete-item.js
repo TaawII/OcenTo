@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const itemId = link.getAttribute("data-item-id");
   
         // Potwierdzenie usunięcia
-        const confirmDelete = confirm("Czy na pewno chcesz usunąć ten przedmiot?");
+        const confirmDelete = confirm("Czy na pewno chcesz usunąć ten przedmiot? Usunięte zostaną również wszystkie oceny oraz komentarze użytkowników.");
         if (!confirmDelete) return;
   
         try {

@@ -1,35 +1,37 @@
 extends ../layout
 
 block content
-  .page-header
-    h1 Itemy dla wydarzenia: #{event.title}
-
   doctype html
   html
     head
       link(rel="stylesheet", href="/stylesheets/items/event-items.css")
       script(src="/javascripts/delete-item.js")
     body
-  .item-list
+      // Wyraźny nagłówek na górze strony
+      .page-header
+        h2 #{event.title} - Menedżer przedmiotów
+        br
+        a.btn-add-item(href=`/panel/events/${event.id}/items/create`) Dodaj przedmiot
 
-    .items-grid
-      each item in items
-        .item-card
-          a(href=`/panel/events/${event.id}/items/${item.id}`)
-            if item.image
-              img(src=`data:image/png;base64,${item.image.toString('base64')}` alt='Obrazek itemu')
-            .item-info
-              h4= item.name
-              ul
-                each value, index in item.item_values
-                  li
-                    //- Jeśli wartość jest pusta, wyświetlamy domyślną wartość
-                    | #{event.item_properties[index]}: #{value || 'Brak wartości'}
+      .item-list
+        .items-grid
+          each item in items
+            .item-card
+              if item.image
+                img(src=`data:image/png;base64,${item.image.toString('base64')}` alt='Obrazek itemu')
+              .item-info
+                h4= item.name
+                ul
+                  each value, index in item.item_values
+                    li
+                      strong #{event.item_properties[index]}: 
+                      | #{value || 'Brak wartości'}
 
-          .item-actions
-            a.btn-edit(href=`/panel/events/${event.id}/items/${item.id}/edit`) Edytuj
-            a.btn-delete(href="#" data-event-id=`${event.id}` data-item-id=`${item.id}`) Usuń
+              .item-actions
+                a.btn-reviews(href=`/panel/events/${event.id}/items/${item.id}/reviews`) Oceny
+                a.btn-edit(href=`/panel/events/${event.id}/items/${item.id}/edit`) Edytuj
+                a.btn-delete(href="#" data-event-id=`${event.id}` data-item-id=`${item.id}`) Usuń
 
-  //- Jeżeli nie ma przedmiotów
-  if items.length === 0
-    p Brak itemów w tym wydarzeniu.
+        // Jeżeli nie ma przedmiotów
+        if items.length === 0
+          p Brak przedmiotów w tym wydarzeniu.
