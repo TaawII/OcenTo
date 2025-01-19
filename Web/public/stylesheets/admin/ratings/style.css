@@ -1,0 +1,133 @@
+/* Wyśrodkowanie strony */
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(120deg, #8e44ad, #6c63ff);
+  }
+  
+  /* Kontener admina */
+  .container {
+    width: 90%; /* Zajmuje większą część ekranu */
+    max-width: 1400px; /* Maksymalna szerokość */
+    background: #2c2c54;
+    padding: 3rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    animation: fadeIn 0.8s ease-in-out;
+  }
+  
+  /* Tytuły i sekcje */
+  h1 {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    color: #fff;
+    text-align: center;
+  }
+  
+  /* Tabela */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+  
+  table th, table td {
+    padding: 15px 20px;
+    text-align: left;
+    color: #ddd;
+    border-bottom: 1px solid #6c63ff;
+  }
+  
+  table tbody tr:hover {
+    background: rgba(140, 82, 255, 0.2);
+    transition: background 0.3s ease;
+  }
+  button {
+    background: linear-gradient(120deg, #6c63ff, #8e44ad);
+    border: none;
+    border-radius: 5px;
+    color: #fff;
+    font-weight: 600;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease;
+  }
+  
+  button:hover {
+    background: linear-gradient(120deg, #8e44ad, #6c63ff);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  }
+  /* Przycisk cofania */
+  a.back-button {
+    display: inline-block;
+    margin-top: 2rem;
+    padding: 10px 20px;
+    background: linear-gradient(120deg, #6c63ff, #8e44ad);
+    color: #fff;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 5px;
+    text-align: center;
+    transition: background 0.3s ease, transform 0.2s ease;
+  }
+  
+  a.back-button:hover {
+    background: linear-gradient(120deg, #8e44ad, #6c63ff);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .btn-delete-comment {
+    background: #e67e22;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease;
+  }
+  
+  .btn-delete-comment:hover {
+    background: #d35400;
+    transform: translateY(-2px);
+  }
+  
+  .btn-delete-rating {
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease;
+  }
+  
+  .btn-delete-rating:hover {
+    background: #c0392b;
+    transform: translateY(-2px);
+  }
+  
+  
+  /* Animacje */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  

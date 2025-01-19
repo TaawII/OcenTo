@@ -158,7 +158,7 @@ exports.deleteItem = async (req, res) => {
 };
 
 exports.deleteRatingAndComment = async (req, res) => {
-  const { eventId, itemId, ratingId } = req.params; L
+  const { eventId, itemId, ratingId } = req.params; 
   const serverURL = process.env.SERVER_URL || 'http://127.0.0.1:8000'; 
   const authToken = req.cookies.auth_token; 
 
@@ -179,5 +179,29 @@ exports.deleteRatingAndComment = async (req, res) => {
       return res.status(404).send('Rating and comment not found.');
     }
     res.status(500).send('Error deleting rating and comment.');
+  }
+};
+
+exports.deleteComment = async (req, res) => {
+  const { eventId, itemId, ratingId } = req.params;
+  const serverURL = process.env.SERVER_URL || 'http://127.0.0.1:8000';
+  const authToken = req.cookies.auth_token;
+
+  try {
+    const response = await axios.patch(
+      `${serverURL}/api/events/admin/allevents/${eventId}/items/${itemId}/ratings/${ratingId}/delete-comment/`,
+      {}, // Nie wysyłamy żadnego payload
+      { headers: { Authorization: `Bearer ${authToken}` } }
+    );
+
+    res.status(200).send({ message: response.data.message });
+  } catch (error) {
+    console.error('Error deleting comment:', error.message);
+    if (error.response?.status === 403) {
+      return res.status(403).send('You are not authorized to delete this comment.');
+    } else if (error.response?.status === 404) {
+      return res.status(404).send('Comment not found.');
+    }
+    res.status(500).send('Error deleting comment.');
   }
 };

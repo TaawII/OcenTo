@@ -3,7 +3,8 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from .views import RegisterView, LoginView, MobileEventsListView, OwnerEventsListView, CreateEventView, \
     MobileItemsListView, CheckEventMembershipView, JoinEventView, VerifyTokenView, MobileItemDetailsView, \
     ItemRatingAddOrModifyView, Decrypt, EventDetailView, EventEditView, UserEventsView, AdminEventsListView, \
-    EventItemsView, AdminItemRatingsView, EventDeleteView, ItemDeleteView, AdminDeleteRatingAndCommentView
+    EventItemsView, AdminItemRatingsView, EventDeleteView, ItemDeleteView, AdminDeleteRatingAndCommentView, \
+    AdminDeleteCommentView
 
 # Zapisujcie wszystkie url w całosci z małych liter: np. zamiast MobileEventsList używajcie mobileeventslist
 urlpatterns = [
@@ -29,7 +30,6 @@ urlpatterns = [
     path('admin/allevents/<int:pk>/items/<int:item_id>/ratings/', AdminItemRatingsView.as_view(), name='item-ratings'),
     path('admin/allevents/<int:pk>/delete/', EventDeleteView.as_view(), name='event-delete'),
     path('admin/allevents/<int:pk>/items/<int:item_id>/delete/', ItemDeleteView.as_view(), name='delete-item'),
-    path('admin/allevents/<int:pk>/items/<int:item_id>/ratings/<int:rating_id>/delete/',AdminDeleteRatingAndCommentView.as_view(),name='delete-rating-comment',
-),
-
+    path('admin/allevents/<int:pk>/items/<int:item_id>/ratings/<int:rating_id>/delete/',AdminDeleteRatingAndCommentView.as_view(),name='delete-rating-comment',),
+    path('admin/allevents/<int:pk>/items/<int:item_id>/ratings/<int:rating_id>/delete-comment/',AdminDeleteCommentView.as_view(),name='delete-comment',),
 ]

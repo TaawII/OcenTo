@@ -394,3 +394,19 @@ class AdminDeleteRatingAndCommentView(APIView):
         rating = get_object_or_404(ItemRating, id=rating_id, item=item)
         rating.delete()
         return Response({'message': 'Rating and comment deleted successfully.'}, status=200)
+
+
+class AdminDeleteCommentView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, pk, item_id, rating_id, *args, **kwargs):
+        if not request.user.role == 'admin':
+            return Response({'error': 'Only admins can delete comments.'}, status=403)
+        item = get_object_or_404(Item, id=item_id, event_id=pk)
+        rating = get_object_or_404(ItemRating, id=rating_id, item=item)
+
+        # Usunięcie tylko komentarza
+        rating.comment = None
+        rating.save()
+
+        return Response({'message': 'Comment deleted successfully.'}, status=200)
