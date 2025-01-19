@@ -1,0 +1,46 @@
+extends ../layout
+
+block content
+  doctype html
+  html
+    head
+      link(rel="stylesheet", href="/stylesheets/items/item-reviews.css")
+      script(src="/javascripts/delete-review.js")
+    body
+      .form-header
+        h2 Oceny #{itemName}
+
+      .reviews-container
+        if hasRatings
+          each rating in ratings
+            .review-card
+              h4= rating.username
+              p
+                strong Ocena: 
+                | #{rating.rating_value} / 5.0
+              if rating.comment
+                p
+                  strong Komentarz: 
+                  | #{rating.comment}
+              else
+                p
+                  strong Komentarz: 
+                  | brak
+              .actions
+                a.btn-delete-rating(
+                  href="#"
+                  data-event-id=`${eventId}`
+                  data-item-id=`${itemId}`
+                  data-rating-id=`${rating.id}`
+                ) Usuń ocenę wraz z komentarzem
+                a.btn-delete-comment(
+                  href="#"
+                  data-event-id=`${eventId}`
+                  data-item-id=`${itemId}`
+                  data-rating-id=`${rating.id}`
+                ) Usuń sam komentarz
+        else
+          p.no-ratings Nie ma jeszcze żadnych ocen do tego przedmiotu.
+
+      .footer
+        a.btn-back(href=`/panel/events/${eventId}/items`) Powrót do listy przedmiotów

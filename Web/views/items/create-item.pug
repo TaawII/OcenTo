@@ -1,21 +1,31 @@
 extends ../layout
 
 block content
-  .page-header
-    h1 Dodaj item do wydarzenia: #{event.title}
+  doctype html
+  html
+    head
+      link(rel="stylesheet", href="/stylesheets/items/create-item.css")
+    body
+      .form-header
+        h2 Dodawanie przedmiotu
 
-  form(action=`/panel/events/${event.id}/items/create` method="POST" enctype="multipart/form-data")
-    // Pole dla nazwy itemu (wymagane)
-    .form-group
-      label(for="name") Nazwa: 
-      input(type="text" name="name" placeholder="Wpisz nazwę itemu" required)
-    each property, index in item_properties
-      .form-group
-        label #{property}: 
-        input(type="text" name=`item_values[${property}]` placeholder=default_values[index] value="")
+      form(action=`/panel/events/${event.id}/items/create` method="POST" enctype="multipart/form-data")
+        // Pole dla nazwy itemu (wymagane)
+        .field-row
+          label(for="name") Nazwa przedmiotu:
+          input(type="text" name="name" placeholder="Wpisz nazwę itemu" required)
 
-    .form-group
-      label(for="image") Obrazek: 
-      input(type="file" name="image" accept='image/*')
+        // Pola dla właściwości itemu
+        #item-values-container
+          each property, index in item_properties
+            .field-row
+              label #{property}:
+              input(type="text" name=`item_values[${property}]` placeholder=default_values[index] value="")
 
-    button(type="submit") Dodaj Item
+        // Pole dla obrazka
+        .field-row
+          label(for="image") Obrazek (opcjonalnie):
+          input(type="file" name="image" accept='image/*')
+
+        // Przycisk dodawania
+        button(type="submit") Dodaj Item
