@@ -372,42 +372,65 @@ class AddItemToEventView(APIView):
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
 class OwnerEventItemsView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request, event_id):
         user_id = request.user.id
 
-        # Pobieramy event na podstawie event_id
+        # Pobierz event na podstawie event_id
         event = get_object_or_404(Event, id=event_id)
         
-        # Sprawdzamy, czy użytkownik jest właścicielem eventu
+        # Sprawdź, czy użytkownik jest właścicielem eventu
         if event.owner.id != user_id:
             return Response({"error": "Nie masz uprawnień do wyświetlenia itemów tego wydarzenia."}, status=status.HTTP_403_FORBIDDEN)
 
-        # Pobieramy wszystkie itemy powiązane z tym eventem
+        # Pobierz wszystkie itemy powiązane z tym eventem
         items = Item.objects.filter(event=event)
-        
-        # Serializujemy dane itemów
-        items_data = ItemSerializer(items, many=True).data
 
-        # Przygotowujemy dane eventu, które będą zawierać item_properties i default_values
+        # Przygotuj dane przedmiotów z obliczeniem średnich ocen
+        items_data = []
+        for item in items:
+            # Pobierz wszystkie oceny dla danego przedmiotu
+            ratings = ItemRating.objects.filter(item=item)
+
+            # Oblicz sumę i liczbę ocen
+            total_rating = sum(rating.rating_value for rating in ratings)
+            count = ratings.count()
+            comments_count = ratings.exclude(comment=None).count()  # Liczba komentarzy
+
+            # Oblicz średnią ocenę, zaokrąglenie do 1 miejsc po przecinku
+            average_rating = round(total_rating / count, 1) if count > 0 else 0.0
+
+            # Serializuj dane przedmiotu i dodaj średnią ocenę
+            item_data = ItemSerializer(item).data
+            item_data['average_rating'] = average_rating  # Średnia ocena do danych przedmiotu
+            item_data['rating_count'] = count  # Liczba ocen
+            item_data['comments_count'] = comments_count  # Liczba komentarzy
+            items_data.append(item_data)
+
+        # Sortuj przedmioty po średniej ocenie (od najwyższej do najniższej)
+        items_data = sorted(items_data, key=lambda x: x['average_rating'], reverse=True)
+
+        # Przygotuj dane eventu
         event_data = {
             'title': event.title,
             'item_properties': event.item_properties,
             'default_values': event.default_values
         }
 
-        # Zwracamy dane: event wraz z itemami
+        # Zwróć dane
         return Response({
             'success': True, 
             'data': {
                 'event': event_data,
                 'items': items_data
             }
-        }, status=status.HTTP_200_OK) 
-        
+        }, status=status.HTTP_200_OK)
+
+
+
+
 class OwnerDeleteItemView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -476,3 +499,62 @@ class ItemEditView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    
+class OwnerItemReviewsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, event_id, item_id):
+        # Pobierz przedmiot i sprawdź, czy należy do eventu
+        item = get_object_or_404(Item, id=item_id, event_id=event_id)
+
+        # Pobierz wszystkie oceny i komentarze dla danego przedmiotu
+        ratings = ItemRating.objects.filter(item=item).select_related('user')
+
+        # Serializuj dane
+        serialized_ratings = [
+            {
+                'id': rating.id,
+                'username': rating.user.username,
+                'rating_value': rating.rating_value,
+                'comment': rating.comment,
+            }
+            for rating in ratings
+        ]
+
+        # Zwróć dane jako odpowiedź
+        return Response({'item_name': item.name, 'ratings': serialized_ratings}, status=status.HTTP_200_OK)
+
+
+class OwnerDeleteCommentView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, event_id, item_id, rating_id):
+        print(f"event_id: {event_id}, item_id: {item_id}, rating_id: {rating_id}")  # Debugowanie
+        # Pobierz ocenę
+        rating = get_object_or_404(ItemRating, id=rating_id, item_id=item_id, item__event_id=event_id)
+
+        # Sprawdź, czy użytkownik jest właścicielem eventu
+        if rating.item.event.owner != request.user:
+            return Response({'error': 'Nie masz uprawnień do usunięcia tego komentarza.'}, status=status.HTTP_403_FORBIDDEN)
+
+        # Usuń komentarz
+        rating.comment = None
+        rating.save()
+        return Response({'success': 'Komentarz został usunięty.'}, status=status.HTTP_200_OK)
+
+class OwnerDeleteRatingView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, event_id, item_id, rating_id):
+        print(f"event_id: {event_id}, item_id: {item_id}, rating_id: {rating_id}")  # Debugowanie
+        # Pobierz ocenę
+        rating = get_object_or_404(ItemRating, id=rating_id, item_id=item_id, item__event_id=event_id)
+
+        # Sprawdź, czy użytkownik jest właścicielem eventu
+        if rating.item.event.owner != request.user:
+            return Response({'error': 'Nie masz uprawnień do usunięcia tej oceny.'}, status=status.HTTP_403_FORBIDDEN)
+
+        # Usuń ocenę
+        rating.delete()
+        return Response({'success': 'Ocena została usunięta.'}, status=status.HTTP_200_OK)

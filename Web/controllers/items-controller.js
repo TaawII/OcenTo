@@ -78,7 +78,6 @@ exports.createItem = async (req, res) => {
       res.status(500).send('Error adding item – the item with this name may already exist in the database.');
     }
   };
-  
 
 exports.getEventItems = async (req, res) => {
   const eventId = req.params.event_id;
@@ -90,33 +89,23 @@ exports.getEventItems = async (req, res) => {
       headers: { Authorization: `Bearer ${authToken}` },
     });
 
-    const { event, items } = response.data.data;  // Dane o wydarzeniu i itemach
+    const { event, items } = response.data.data; // Dane o wydarzeniu i itemach
 
     // Rozdzielamy event na odpowiednie zmienne
     const { title, item_properties, default_values } = event;
 
-    // Modyfikujemy itemy, aby przekazać item_values oraz domyślne wartości
-    const itemsData = items.map(item => {
-      // Mapujemy itemy, dodajemy domyślne wartości, gdy item_values są puste
-      const itemWithValues = item.item_values.map((value, index) => {
-        return value.trim() === "" && default_values[index] ? default_values[index] : value;
-      });
-      return {
-        ...item,
-        item_values: itemWithValues
-      };
-    });
-
     // Przesyłamy dane do widoku
     res.render('items/event-items', {
       event: { id: eventId, title, item_properties, default_values },
-      items: itemsData   // Przesyłamy listę itemów z przetworzonymi wartościami
+      items, // Lista itemów zawierająca average_rating
     });
   } catch (error) {
     console.error(error);
     res.status(500).send('Błąd podczas pobierania itemów dla wydarzenia.');
   }
 };
+
+
 
 exports.deleteItem = async (req, res) => {
   const { eventId, itemId } = req.params;
@@ -200,5 +189,69 @@ exports.editItem = async (req, res) => {
   } catch (error) {
     console.error('Błąd podczas zapisywania itemu:', error.response?.data || error.message);
     res.status(500).send('Nie udało się zapisać zmian.');
+  }
+};
+
+
+exports.getItemReviews = async (req, res) => {
+  const { eventId, itemId } = req.params;
+  const authToken = req.cookies.auth_token;
+
+  try {
+    // Pobierz dane ocen i komentarzy dla danego itemu
+    const response = await axios.get(`http://${serverURL}/${eventId}/items/${itemId}/reviews`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+
+    const { item_name, ratings } = response.data;
+
+    // Jeśli brak ocen, przekaż flagę do widoku
+    const hasRatings = ratings && ratings.length > 0;
+
+    console.log('Dane ocen i komentarzy:', ratings);
+
+    // Przekaż dane do widoku
+    res.render('items/item-reviews', {
+      itemName: item_name,
+      ratings: ratings,
+      hasRatings: ratings && ratings.length > 0,
+      eventId: eventId,
+      itemId: itemId,
+    });
+  } catch (error) {
+    console.error('Błąd podczas pobierania ocen i komentarzy:', error.response?.data || error.message);
+    res.status(500).send('Nie udało się załadować danych.');
+  }
+};
+
+exports.deleteComment = async (req, res) => {
+  const { eventId, itemId, ratingId } = req.params;
+  const authToken = req.cookies.auth_token;
+
+  try {
+    const response = await axios.delete(`http://${serverURL}/${eventId}/items/${itemId}/reviews/${ratingId}/delete-comment`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+
+    res.status(200).send({ message: "Komentarz został pomyślnie usunięty." });
+  } catch (error) {
+    console.error("Błąd podczas usuwania komentarza:", error.response?.data || error.message);
+    res.status(500).send({ error: "Nie udało się usunąć komentarza." });
+  }
+};
+
+exports.deleteRating = async (req, res) => {
+  const { eventId, itemId, ratingId } = req.params;
+  const authToken = req.cookies.auth_token;
+
+  try {
+    const response = await axios.delete(`http://${serverURL}/${eventId}/items/${itemId}/reviews/${ratingId}/delete`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+
+    res.status(200).send({ message: "Ocena została pomyślnie usunięta." });
+  } catch (error) {
+    console.error("Błąd podczas usuwania oceny:", error.response?.data || error.message);
+    res.status(500).send({ error: "Nie udało się usunąć oceny." });
   }
 };

@@ -33,5 +33,14 @@ router.post('/events/:eventId/items/:itemId/edit', itemsController.editItem);
 // Usuwanie itemu z wydarzenia
 router.delete('/events/:eventId/items/:itemId/delete', itemsController.deleteItem);
 
+// Wyświetlenie ocen i komentarzy dla danego itemu
+router.get('/events/:eventId/items/:itemId/reviews', itemsController.getItemReviews);
+
+// Usunięcie samego komentarza dla danej oceny
+router.delete('/events/:eventId/items/:itemId/reviews/:ratingId/delete-comment', itemsController.deleteComment);
+
+// Usunięcie całej oceny (punkty i komentarz)
+router.delete('/events/:eventId/items/:itemId/reviews/:ratingId/delete', itemsController.deleteRating);
+
 module.exports = router;
 

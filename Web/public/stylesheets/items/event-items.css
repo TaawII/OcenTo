@@ -26,8 +26,8 @@
   /* Obrazek itemu - stała wysokość */
   .item-card img {
     width: 100%;
-    height: 200px; /* Stała wysokość zdjęcia */
-    object-fit: cover; /* Upewnia się, że zdjęcie nie wykracza poza obszar */
+    height: 200px;
+    object-fit: cover;
     border-bottom: 1px solid #ddd;
   }
   
@@ -52,10 +52,15 @@
     color: #555;
   }
 
-  /* Pogrubienie etykiet w li */
+  .item-info p {
+    font-size: 16px;
+    color: #555;
+    margin-top: 2px;
+  }  
+
   .item-info li strong {
-    font-weight: bold; /* Pogrubienie tekstu */
-    color: #333; /* Opcjonalnie ciemniejszy kolor dla większej widoczności */
+    font-weight: bold;
+    color: #333;
   }
   
   /* Przyciski akcji */
@@ -80,37 +85,37 @@
   
   /* Stylowanie przycisku "Edytuj" */
   .item-actions a.btn-reviews {
-    background-color: #4caf50; /* Zielony kolor */
+    background-color: #4caf50;
     color: white;
     border: 1px solid #4caf50;
   }
   
   .item-actions a.btn-reviews:hover {
-    background-color: #45a049; /* Ciemniejszy zielony przy najechaniu */
+    background-color: #45a049;
     border-color: #45a049;
   }
   
   /* Stylowanie przycisku "Usuń" */
   .item-actions a.btn-delete {
-    background-color: #f44336; /* Czerwony kolor */
+    background-color: #f44336;
     color: white;
     border: 1px solid #f44336;
   }
   
   .item-actions a.btn-delete:hover {
-    background-color: #e53935; /* Ciemniejszy czerwony przy najechaniu */
+    background-color: #e53935;
     border-color: #e53935;
   }
   
 /* Stylowanie przycisku "Oceny i komentarze" */
 .item-actions a.btn-edit {
-  background-color: #FFC107; /* Żółty kolor */
+  background-color: #FFC107;
   color: white;
   border: 1px solid #FFC107;
 }
 
 .item-actions a.btn-edit:hover {
-  background-color: #FFB300; /* Ciemniejszy żółty przy najechaniu */
+  background-color: #FFB300;
   border-color: #FFB300;
 }  
 
@@ -118,7 +123,7 @@
 .page-header {
   text-align: center;
   /* margin-bottom: 20px; */
-  margin: 20px 0 20px; /* Dodany odstęp od góry i dołu */
+  margin: 20px 0 20px;
 }
 
 .page-header h2 {
@@ -130,14 +135,14 @@
   border-bottom: 2px solid #4CAF50;
   display: inline-block;
   padding-bottom: 5px;
-  margin: 0 auto 0px; /* Dodany odstęp pod nagłówkiem */
+  margin: 0 auto 0px;
 }
 
 /* Przycisk "Dodaj przedmiot" */
 .btn-add-item {
   display: inline-block;
   margin-top: 10px;
-  background-color: #4CAF50; /* Zielony kolor */
+  background-color: #4CAF50;
   color: white;
   padding: 10px 15px;
   font-size: 16px;
@@ -149,5 +154,5 @@
 }
 
 .btn-add-item:hover {
-  background-color: #45a049; /* Ciemniejszy zielony przy hover */
+  background-color: #45a049;
 }

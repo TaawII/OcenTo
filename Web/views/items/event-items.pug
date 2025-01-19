@@ -7,7 +7,6 @@ block content
       link(rel="stylesheet", href="/stylesheets/items/event-items.css")
       script(src="/javascripts/delete-item.js")
     body
-      // Wyraźny nagłówek na górze strony
       .page-header
         h2 #{event.title} - Menedżer przedmiotów
         br
@@ -21,6 +20,12 @@ block content
                 img(src=`data:image/png;base64,${item.image.toString('base64')}` alt='Obrazek itemu')
               .item-info
                 h4= item.name
+                p
+                  strong Średnia ocena: 
+                  | #{item.average_rating} / 5.0
+                p
+                  strong
+                    | Oceny (#{item.rating_count}), komentarze (#{item.comments_count})
                 ul
                   each value, index in item.item_values
                     li
