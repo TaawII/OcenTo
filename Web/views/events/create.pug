@@ -26,28 +26,23 @@ block content
           label(for="end_time") Data zakończenia:
           input(type="datetime-local" id="end_time" name="end_time" required)
 
-        // Pole dla statusu wydarzenia (wymagane)
-        .field-row
-          label(for="status") Status:
-          select(name="status" required)
-            option(value="Waiting") Oczekujący
-            option(value="Active") Aktywny
-            option(value="End") Zakończony
-            option(value="ActiveWithRanking") Aktywny z rankingiem
+        //- // Pole dla statusu wydarzenia (wymagane)
+        //- .field-row
+        //-   label(for="status") Status:
+        //-   select(name="status" required)
+        //-     option(value="Waiting") Oczekujący
+        //-     option(value="Active") Aktywny
+        //-     option(value="End") Zakończony
+        //-     option(value="ActiveWithRanking") Aktywny z rankingiem
 
         // Kategorie
         .field-row
           label(for="categories") Kategorie:
           .checkbox-group
-            div
-              input(type="checkbox" name="categories" value="Impreza")
-              label(for="Impreza") Impreza
-            div
-              input(type="checkbox" name="categories" value="Piwo")
-              label(for="Piwo") Piwo
-            div
-              input(type="checkbox" name="categories" value="Inna")
-              label(for="Inna") Inna
+            each category in categories
+              div
+                input(type="checkbox" name="categories" value=category)
+                label(for=category)= category
 
         // Pole dla prywatności wydarzenia
         .field-row

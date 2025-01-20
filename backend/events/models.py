@@ -50,25 +50,6 @@ class User(AbstractBaseUser):
     def __str__(self):
         return self.username
 
-    # def has_perm(self, perm, obj=None):
-    #     # Prosta implementacja: wszyscy użytkownicy mają wszystkie uprawnienia
-    #     return True
-
-    # def has_module_perms(self, app_label):
-    #     # Prosta implementacja: wszyscy użytkownicy mają dostęp do każdego modułu
-    #     return True
-
-
-ALLOWED_CATEGORIES = {"inna", "impreza", "piwo"}
-
-
-def validate_categories(value):
-    if not isinstance(value, list):
-        raise ValidationError("Categories must be a list.")
-    for item in value:
-        if item not in ALLOWED_CATEGORIES:
-            raise ValidationError(f"Invalid category: {item}. Allowed categories are: {', '.join(ALLOWED_CATEGORIES)}")
-
 class Event(models.Model):
     id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=255)
@@ -81,16 +62,8 @@ class Event(models.Model):
     end_time = models.DateTimeField()
     is_private = models.BooleanField(default=False)
     password = models.CharField(max_length=255, blank=True, null=True)
-    categories = models.JSONField(validators=[validate_categories])
+    categories = models.JSONField()
     image = models.BinaryField(blank=True, null=True)
-
-    # def get_password_decrypted(self):
-    #     # Odszyfruj hasło przy odczycie
-    #     if self.password:
-    #         return decrypt_password(self.password)
-    #     return None
-    # def __str__(self):
-    #     return self.title
 
 class Item(models.Model):
     id = models.AutoField(primary_key=True)
