@@ -1,0 +1,101 @@
+/* Styl kontenera */
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(120deg, #8e44ad, #6c63ff);
+  }
+  
+  .container {
+    width: 90%;
+    max-width: 1200px;
+    margin: auto;
+    background: #2c2c54;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    color: #fff;
+    animation: fadeIn 0.8s ease-in-out;
+  }
+  
+  /* Styl zdjęcia wydarzenia */
+  .event-image img {
+    display: block;
+    max-width: 25%; /* Zmniejszono do połowy */
+    height: auto;
+    margin: 1rem auto; /* Wyśrodkowanie */
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Nagłówki */
+  h1 {
+    text-align: center;
+    color: #fff;
+    margin-top: 2rem;
+    font-size: 2.5rem;
+  }
+  
+  h2 {
+    text-align: center; /* Wyśrodkowanie nagłówka */
+    margin-bottom: 1rem;
+    color: #ddd;
+  }
+  
+  /* Tabela */
+  .details-table,
+  .properties-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+  
+  .details-table th,
+  .details-table td,
+  .properties-table th,
+  .properties-table td {
+    padding: 15px;
+    text-align: left;
+    color: #ddd;
+    border-bottom: 1px solid #6c63ff;
+  }
+  
+  .details-table th {
+    width: 30%; /* Szersza kolumna dla nazw pól */
+    color: #fff;
+  }
+  
+  /* Linki i przyciski */
+  .links {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2rem;
+  }
+  
+  .back-button {
+    display: inline-block;
+    padding: 10px 20px;
+    background: linear-gradient(120deg, #6c63ff, #8e44ad);
+    color: #fff;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 5px;
+    text-align: center;
+    transition: background 0.3s ease, transform 0.2s ease;
+  }
+  
+  .back-button:hover {
+    background: linear-gradient(120deg, #8e44ad, #6c63ff);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Przyciski akcji */
+  .links a:last-child {
+    margin-left: auto; /* Przesunięcie przycisku w prawo */
+  }
+  

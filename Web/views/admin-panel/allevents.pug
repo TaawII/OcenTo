@@ -1,0 +1,35 @@
+doctype html
+html
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title Wydarzenia
+    link(rel="stylesheet", href="/stylesheets/admin/events/style.css")  
+  body
+
+    if events.length === 0
+      p Nie ma żadnych wydarzeń.
+    else
+      .container
+        h2 Lista wydarzeń
+        table
+          thead
+            tr
+              th Tytuł
+              th Status
+              th Start
+              th Koniec
+              th Akcje
+          tbody
+            each event in events
+              tr
+                td #{event.title}
+                td #{event.status}
+                td #{event.start_time}
+                td #{event.end_time}
+                td
+                  .actions
+                    a.btn-details(href=`/admin/allevents/${event.id}`) Szczegóły
+                    form(method="post", action="/admin/allevents/#{event.id}?_method=DELETE")
+                      button.btn-danger Usuń
+    //a.back-button(href='/') Powrót do panelu głównego

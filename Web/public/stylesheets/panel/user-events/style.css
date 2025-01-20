@@ -25,7 +25,7 @@ table {
   }
   
   /* Styl dla przycisków w kolumnie Akcje */
-  a.btn-details, a.btn-edit, a.btn-stats, a.btn-add-item {
+  a.btn-details, a.btn-edit, a.btn-stats, a.btn-items-list {
     display: inline-block;
     padding: 8px 15px;
     margin-right: 10px;
@@ -61,12 +61,12 @@ table {
     background-color: #e0a800;
   }
 
-  a.btn-add-item {
+  a.btn-items-list {
     background-color: #17a2b8;
     color: white;
   }
     
-  a.btn-add-item:hover {
+  a.btn-items-list:hover {
     background-color: #117a8b;
   }
 

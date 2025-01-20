@@ -1,19 +1,22 @@
 from django.contrib.auth.hashers import make_password, check_password
+from rest_framework.generics import ListCreateAPIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework import status
+from rest_framework import status, permissions
 from django.db.models import Count
 from django.shortcuts import get_object_or_404
 import logging, base64
 from .models import User, Event, Item, ItemRating
-from .serializers import MobileEventSerializer, OwnerEventSerializer, EventSerializer, ItemSerializer, EventMember, MobileEventItemSerializer, ItemRatingSerializer, ItemDetailSerializer, ItemRatingDetailSerializer, EventEditSerializer
+from .serializers import MobileEventSerializer, OwnerEventSerializer, EventSerializer, ItemSerializer, EventMember, MobileEventItemSerializer, ItemRatingSerializer, ItemDetailSerializer, ItemRatingDetailSerializer, EventEditSerializer, AdminItemRatingSerializer
 from rest_framework.authentication import get_authorization_header
 from io import BytesIO
 from .encryption import decrypt_password, encrypt_password
-
+from django.core.exceptions import ValidationError
 logger = logging.getLogger(__name__)
 
 class RegisterView(APIView):
@@ -128,7 +131,7 @@ class EventDetailView(APIView):
 
     def get(self, request, pk):
         event = get_object_or_404(Event, pk=pk)
-        if event.owner != request.user:
+        if event.owner != request.user and request.user.role != 'admin':  # Sprawdź, czy użytkownik jest adminem
             return Response({"error": "You are not authorized to view this event."}, status=status.HTTP_403_FORBIDDEN)
         serializer = EventSerializer(event)
         return Response(serializer.data)
@@ -303,6 +306,126 @@ class MobileDeleteRatingView(APIView):
         rating.delete()
         return Response({'success': 'Ocena została usunięta.'}, status=status.HTTP_200_OK)
 
+class IsAdminUser(BasePermission):
+    def has_permission(self, request, view):
+        # Sprawdź, czy użytkownik jest zalogowany i ma rolę 'admin'
+        return request.user.is_authenticated and request.user.role == 'admin'
+
+class AdminEventsListView(APIView):
+    authentication_classes = [JWTAuthentication]  # Dodaj obsługę tokenów JWT
+    permission_classes = [IsAdminUser]  # Wymuś rolę 'admin'
+
+    def get(self, request):
+        print(f"Authorization Header: {request.headers.get('Authorization')}")
+        if not request.user.is_authenticated or request.user.role != 'admin':
+            raise PermissionDenied("Brak dostępu. Tylko administratorzy mogą wyświetlać tę listę.")
+        events = Event.objects.all()
+        serializer = EventSerializer(events, many=True)
+        return Response(serializer.data)
+
+class EventItemsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        event = get_object_or_404(Event, id=pk)
+        if event.owner != request.user and request.user.role != 'admin':
+            return Response(
+                {"error": "You are not authorized to view the items of this event."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        items = Item.objects.filter(event=event)
+        serialized_items = ItemSerializer(items, many=True).data
+        response_data = {
+            "items": serialized_items,
+            "default_values": event.default_values,
+            "item_properties": event.item_properties
+        }
+        print(event.default_values)
+        return Response(response_data)
+
+class AdminItemRatingsView(APIView):
+    permission_classes = [IsAdminUser]  # Dostęp tylko dla administratora
+
+    def get(self, request, pk, item_id):
+        ratings = ItemRating.objects.filter(item__id=item_id, item__event__id=pk)
+        serializer = AdminItemRatingSerializer(ratings, many=True)
+        return Response(serializer.data)
+
+class EventDeleteView(APIView):
+    permission_classes = [IsAuthenticated]  # Uwierzytelnienie wymagane
+
+    def delete(self, request, pk):
+        if request.user.role != 'admin':
+            return Response(
+                {'error': 'You do not have permission to delete events.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        try:
+            event = Event.objects.get(id=pk)
+            event.delete()
+            return Response(
+                {'message': 'Event deleted successfully.'},
+                status=status.HTTP_200_OK
+            )
+        except Event.DoesNotExist:
+            return Response(
+                {'error': 'Event not found.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class ItemDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, pk, item_id, *args, **kwargs):
+        print(f"Received DELETE request for item {item_id} in event {pk}")
+        if not request.user.role == 'admin':
+            return Response({'error': 'Only admins can delete items.'}, status=403)
+
+        try:
+            item = get_object_or_404(Item, event_id=pk, id=item_id)
+            print(f"Found item: {item.name} (ID: {item.id}) for event ID: {pk}")
+
+            item.delete()
+            print(f"Item {item_id} deleted successfully.")
+            return Response({'message': 'Item deleted successfully.'}, status=200)
+
+        except Exception as e:
+            print(f"Error during deletion: {e}")
+            return Response({'error': 'Failed to delete item.'}, status=500)
+
+class AdminDeleteRatingAndCommentView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, pk, item_id, rating_id, *args, **kwargs):
+        if not request.user.role == 'admin':
+            return Response({'error': 'Only admins can delete ratings and comments.'}, status=403)
+        item = get_object_or_404(Item, id=item_id, event_id=pk)
+        rating = get_object_or_404(ItemRating, id=rating_id, item=item)
+        rating.delete()
+        return Response({'message': 'Rating and comment deleted successfully.'}, status=200)
+
+
+class AdminDeleteCommentView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, pk, item_id, rating_id, *args, **kwargs):
+        if not request.user.role == 'admin':
+            return Response({'error': 'Only admins can delete comments.'}, status=403)
+        item = get_object_or_404(Item, id=item_id, event_id=pk)
+        rating = get_object_or_404(ItemRating, id=rating_id, item=item)
+
+        # Usunięcie tylko komentarza
+        rating.comment = None
+        rating.save()
+
+        return Response({'message': 'Comment deleted successfully.'}, status=200)
+
 class AddItemToEventView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -381,3 +504,190 @@ class AddItemToEventView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class OwnerEventItemsView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, event_id):
+        user_id = request.user.id
+
+        # Pobierz event na podstawie event_id
+        event = get_object_or_404(Event, id=event_id)
+        
+        # Sprawdź, czy użytkownik jest właścicielem eventu
+        if event.owner.id != user_id:
+            return Response({"error": "Nie masz uprawnień do wyświetlenia itemów tego wydarzenia."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Pobierz wszystkie itemy powiązane z tym eventem
+        items = Item.objects.filter(event=event)
+
+        # Przygotuj dane przedmiotów z obliczeniem średnich ocen
+        items_data = []
+        for item in items:
+            # Pobierz wszystkie oceny dla danego przedmiotu
+            ratings = ItemRating.objects.filter(item=item)
+
+            # Oblicz sumę i liczbę ocen
+            total_rating = sum(rating.rating_value for rating in ratings)
+            count = ratings.count()
+            comments_count = ratings.exclude(comment=None).count()  # Liczba komentarzy
+
+            # Oblicz średnią ocenę, zaokrąglenie do 1 miejsc po przecinku
+            average_rating = round(total_rating / count, 1) if count > 0 else 0.0
+
+            # Serializuj dane przedmiotu i dodaj średnią ocenę
+            item_data = ItemSerializer(item).data
+            item_data['average_rating'] = average_rating  # Średnia ocena do danych przedmiotu
+            item_data['rating_count'] = count  # Liczba ocen
+            item_data['comments_count'] = comments_count  # Liczba komentarzy
+            items_data.append(item_data)
+
+        # Sortuj przedmioty po średniej ocenie (od najwyższej do najniższej)
+        items_data = sorted(items_data, key=lambda x: x['average_rating'], reverse=True)
+
+        # Przygotuj dane eventu
+        event_data = {
+            'title': event.title,
+            'item_properties': event.item_properties,
+            'default_values': event.default_values
+        }
+
+        # Zwróć dane
+        return Response({
+            'success': True, 
+            'data': {
+                'event': event_data,
+                'items': items_data
+            }
+        }, status=status.HTTP_200_OK)
+
+
+
+
+class OwnerDeleteItemView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, event_id, item_id):
+        # Pobierz przedmiot
+        item = get_object_or_404(Item, id=item_id)
+
+        # Sprawdź, czy przedmiot należy do danego wydarzenia
+        if item.event.id != event_id:
+            return Response({"error": "Przedmiot nie należy do tego wydarzenia."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Sprawdź, czy użytkownik jest właścicielem wydarzenia
+        if item.event.owner != request.user:
+            return Response({"error": "Nie masz uprawnień do usunięcia tego przedmiotu."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Usuń przedmiot (kaskadowo usunie powiązane elementy, np. oceny)
+        item.delete()
+        return Response({"message": "Przedmiot został usunięty pomyślnie."}, status=status.HTTP_200_OK)
+
+class ItemEditView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, event_id, item_id):
+        # Sprawdź, czy event istnieje i należy do użytkownika
+        event = get_object_or_404(Event, id=event_id, owner=request.user)
+
+        # Sprawdź, czy przedmiot należy do tego eventu
+        item = get_object_or_404(Item, id=item_id, event=event)
+
+        # Serializuj dane przedmiotu
+        serializer = ItemSerializer(item)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+    def put(self, request, event_id, item_id):
+        # Sprawdź, czy event istnieje i należy do użytkownika
+        event = get_object_or_404(Event, id=event_id, owner=request.user)
+
+        # Sprawdź, czy przedmiot należy do tego eventu
+        item = get_object_or_404(Item, id=item_id, event=event)
+
+        data = request.data
+        image_data = data.get('image', None)
+
+        # Obsługa obrazu
+        if image_data:
+            try:
+                # Sprawdź, czy dane zawierają prefiks "data:image/jpeg;base64,"
+                if image_data.startswith("data:image/"):
+                    # Usunięcie prefiksu
+                    image_data = image_data.split(",")[1]
+
+                # Dekodowanie danych base64 na format binarny
+                image_binary = base64.b64decode(image_data)
+
+                # Zapisz obraz w przedmiocie
+                item.image = image_binary
+            except (ValueError, ValidationError) as e:
+                print(f"Error decoding image: {e}")
+                return Response({"error": "Invalid image data"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Serializacja i zapis danych
+        serializer = ItemSerializer(item, data=data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    
+class OwnerItemReviewsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, event_id, item_id):
+        # Pobierz przedmiot i sprawdź, czy należy do eventu
+        item = get_object_or_404(Item, id=item_id, event_id=event_id)
+
+        # Pobierz wszystkie oceny i komentarze dla danego przedmiotu
+        ratings = ItemRating.objects.filter(item=item).select_related('user')
+
+        # Serializuj dane
+        serialized_ratings = [
+            {
+                'id': rating.id,
+                'username': rating.user.username,
+                'rating_value': rating.rating_value,
+                'comment': rating.comment,
+            }
+            for rating in ratings
+        ]
+
+        # Zwróć dane jako odpowiedź
+        return Response({'item_name': item.name, 'ratings': serialized_ratings}, status=status.HTTP_200_OK)
+
+
+class OwnerDeleteCommentView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, event_id, item_id, rating_id):
+        print(f"event_id: {event_id}, item_id: {item_id}, rating_id: {rating_id}")  # Debugowanie
+        # Pobierz ocenę
+        rating = get_object_or_404(ItemRating, id=rating_id, item_id=item_id, item__event_id=event_id)
+
+        # Sprawdź, czy użytkownik jest właścicielem eventu
+        if rating.item.event.owner != request.user:
+            return Response({'error': 'Nie masz uprawnień do usunięcia tego komentarza.'}, status=status.HTTP_403_FORBIDDEN)
+
+        # Usuń komentarz
+        rating.comment = None
+        rating.save()
+        return Response({'success': 'Komentarz został usunięty.'}, status=status.HTTP_200_OK)
+
+class OwnerDeleteRatingView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, event_id, item_id, rating_id):
+        print(f"event_id: {event_id}, item_id: {item_id}, rating_id: {rating_id}")  # Debugowanie
+        # Pobierz ocenę
+        rating = get_object_or_404(ItemRating, id=rating_id, item_id=item_id, item__event_id=event_id)
+
+        # Sprawdź, czy użytkownik jest właścicielem eventu
+        if rating.item.event.owner != request.user:
+            return Response({'error': 'Nie masz uprawnień do usunięcia tej oceny.'}, status=status.HTTP_403_FORBIDDEN)
+
+        # Usuń ocenę
+        rating.delete()
+        return Response({'success': 'Ocena została usunięta.'}, status=status.HTTP_200_OK)
