@@ -67,8 +67,6 @@ export default function EventList() {
     navigation.navigate('ItemDetails', { itemId });
   };
 
-
-
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -78,6 +76,13 @@ export default function EventList() {
     );
   }
 
+if (itemsList && ["Waiting"].includes(itemsList.status)) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text style={styles.loadingText}>Ten event jeszcze się nie rozpoczął 🤔</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -104,7 +109,7 @@ export default function EventList() {
               <TouchableOpacity onPress={() => { sortItems('desc', 'name'); toggleModal(); }}>
                 <Text style={[styles.modalOption, sortOrder === 'desc' && sortBy === 'name' && styles.selectedOption]}>Sortuj malejąco po nazwie</Text>
               </TouchableOpacity>
-              {itemsList && ["END", "ActiveWithRanking"].includes(itemsList.status) && (
+              {itemsList && ["End", "ActiveWithRanking"].includes(itemsList.status) && (
                 <>
                   <TouchableOpacity onPress={() => { sortItems('asc', 'rating'); toggleModal(); }}>
                     <Text style={[styles.modalOption, sortOrder === 'asc' && sortBy === 'rating' && styles.selectedOption]}>Sortuj rosnąco po ocenie</Text>
@@ -148,7 +153,7 @@ export default function EventList() {
                         </Text>
                       );
                     })}
-                    {itemsList && ["END", "ActiveWithRanking"].includes(itemsList.status) && (
+                    {itemsList && ["End", "ActiveWithRanking"].includes(itemsList.status) && (
                       <Text style={styles.eventDate}>Średnia ocena: {item.average_rating || 0}</Text>
                       // <Rating
                       //   ratingCount={5}
