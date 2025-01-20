@@ -1,115 +1,138 @@
-doctype html
-html
-  head
-    title Add New Event
-    link(rel="stylesheet" href="/stylesheets/style.css")
-    script(src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js")
-  body
-    h1 Add New Event
-    if error
-      p.error #{error}
-    form(action="/events/create" method="POST" enctype="multipart/form-data")
-      label(for="title") Event Name
-      input(type="text" name="title" required)
+extends ../layout
 
-      label(for="start_time") Start Date
-      input(type="datetime-local" name="start_time" required)
+block content
+  doctype html
+  html
+    head
+      link(rel="stylesheet", href="/stylesheets/panel/create-event.css")
+      script(src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js")
+    body
+      .form-header
+        h2 Dodawanie Wydarzenia
 
-      label(for="end_time") End Date
-      input(type="datetime-local" name="end_time" required)
-
-      label(for="status") Status
-      select(name="status" required) 
-        option(value="Active") Active
-        option(value="Waiting") Waiting
-        option(value="End") End
-        option(value="ActiveWithRanking") Active with Ranking
-
-      label(for="categories") Categories
-      div
-        label(for="Impreza") Impreza
-            input(type="checkbox" name="categories" value="Impreza") 
-      div
-        label(for="Piwo") Piwo
-            input(type="checkbox" name="categories" value="Piwo") 
-      div
-        label(for="Inna") Inna
-            input(type="checkbox" name="categories" value="Inna") 
-
-      label(for="is_private") Private Event
-      input(type="checkbox" name="is_private" id="is_private")
-      label(for="password") Password
-      input(type="password" name="password" id="showPassword" disabled)
-
-      // Dynamic Fields for Item Properties and Default Values
-      label(for="item_properties") Item Properties (JSON)
-      .fields-container
+      form(action="/events/create" method="POST" enctype="multipart/form-data")
+        // Pole dla nazwy wydarzenia (wymagane)
         .field-row
-          input(type="text" name="item_properties" placeholder="Item Name" required)
-          input(type="text" name="default_values" placeholder="Default Value" required)
-          button(type="button" class="remove-field") - Remove
+          label(for="title") Nazwa Wydarzenia:
+          input(type="text" name="title" placeholder="Wpisz nazwę wydarzenia" required)
 
-      button(type="button" id="add-field") + Add New Field
+        // Pole dla daty rozpoczęcia (wymagane)
+        .field-row
+          label(for="start_time") Data rozpoczęcia:
+          input(type="datetime-local" id="start_time" name="start_time" required)
 
-      label(for="image") Upload Event Image
-      input(type="file" name="image" accept='image/*' required)
-      
-      button(type="submit") Create Event
+        // Pole dla daty zakończenia (wymagane)
+        .field-row
+          label(for="end_time") Data zakończenia:
+          input(type="datetime-local" id="end_time" name="end_time" required)
 
-    script(src="https://code.jquery.com/jquery-3.6.0.min.js")
-    script.
-        is_private = false
-        document.getElementById("is_private").addEventListener('click', function() {
-            is_private = !is_private
-            document.getElementById("showPassword").disabled = !is_private
-            document.getElementById("showPassword").value = ""
-        })
-    script.
-      document.addEventListener('DOMContentLoaded', function() {
-        const addButton = document.getElementById('add-field');
-        const fieldsContainer = document.querySelector('.fields-container');
+        // Pole dla statusu wydarzenia (wymagane)
+        .field-row
+          label(for="status") Status:
+          select(name="status" required)
+            option(value="Waiting") Oczekujący
+            option(value="Active") Aktywny
+            option(value="End") Zakończony
+            option(value="ActiveWithRanking") Aktywny z rankingiem
 
-        // Add new field to the container
-        addButton.addEventListener('click', function() {
-          const newFieldRow = document.createElement('div');
-          newFieldRow.classList.add('field-row');
-          newFieldRow.innerHTML = `
-            <input type="text" name="item_properties" placeholder="Item Name" required>
-            <input type="text" name="default_values" placeholder="Default Value" required>
-            <button type="button" class="remove-field">- Remove</button>
-          `;
-          
-          // Add remove button functionality to the new row
-          newFieldRow.querySelector('.remove-field').addEventListener('click', function() {
-            newFieldRow.remove();
+        // Kategorie
+        .field-row
+          label(for="categories") Kategorie:
+          .checkbox-group
+            div
+              input(type="checkbox" name="categories" value="Impreza")
+              label(for="Impreza") Impreza
+            div
+              input(type="checkbox" name="categories" value="Piwo")
+              label(for="Piwo") Piwo
+            div
+              input(type="checkbox" name="categories" value="Inna")
+              label(for="Inna") Inna
+
+        // Pole dla prywatności wydarzenia
+        .field-row
+          label
+            | Prywatne Wydarzenie 
+            input(type="checkbox" name="is_private" id="is_private")
+            
+
+        // Pole dla hasła (domyślnie wyłączone)
+        .field-row
+          label(for="password") Hasło:
+          input(type="password" name="password" id="showPassword" placeholder="Wpisz hasło" disabled)
+
+        // Dynamiczne pola dla właściwości przedmiotów
+        .field-row
+          label(for="item_properties") Właściwości Przedmiotów:
+        .fields-container
+          .field-row
+            input(type="text" name="item_properties" placeholder="Nazwa właściwości" required)
+            input(type="text" name="default_values" placeholder="Domyślna wartość" required)
+            button(type="button" class="remove-field") - Usuń
+
+        button(type="button" id="add-field") + Dodaj Nową Właściwość
+
+        // Pole dla obrazka wydarzenia (wymagane)
+        .field-row
+          label(for="image") Obrazek wydarzenia:
+          input(type="file" name="image" accept="image/*" required)
+
+        // Przycisk tworzenia wydarzenia
+        button(type="submit") Dodaj Wydarzenie
+
+      script.
+        document.addEventListener('DOMContentLoaded', function() {
+          const startTimeField = document.getElementById('start_time');
+          const endTimeField = document.getElementById('end_time');
+
+          // Sprawdzanie zgodności dat
+          function validateDates() {
+            const startTime = new Date(startTimeField.value);
+            const endTime = new Date(endTimeField.value);
+
+            if (endTime < startTime) {
+              alert('Data zakończenia nie może być wcześniejsza niż data rozpoczęcia!');
+              endTimeField.value = '';
+            }
+          }
+
+          // Obsługa zmian w polach daty
+          startTimeField.addEventListener('change', validateDates);
+          endTimeField.addEventListener('change', validateDates);
+
+          // Obsługa dynamicznego dodawania/usuwania pól
+          const addButton = document.getElementById('add-field');
+          const fieldsContainer = document.querySelector('.fields-container');
+
+          addButton.addEventListener('click', function() {
+            const newFieldRow = document.createElement('div');
+            newFieldRow.classList.add('field-row');
+            newFieldRow.innerHTML = `
+              <input type="text" name="item_properties" placeholder="Nazwa właściwości" required>
+              <input type="text" name="default_values" placeholder="Domyślna wartość" required>
+              <button type="button" class="remove-field">- Usuń</button>
+            `;
+
+            newFieldRow.querySelector('.remove-field').addEventListener('click', function() {
+              newFieldRow.remove();
+            });
+
+            fieldsContainer.appendChild(newFieldRow);
           });
 
-          fieldsContainer.appendChild(newFieldRow);
-        });
-
-        // Add remove functionality to existing fields
-        document.querySelectorAll('.remove-field').forEach(button => {
-          button.addEventListener('click', function(event) {
-            event.target.closest('.field-row').remove();
+          document.querySelectorAll('.remove-field').forEach(button => {
+            button.addEventListener('click', function(event) {
+              event.target.closest('.field-row').remove();
+            });
           });
-        });
 
-        // Validate the form data before submitting
-        document.querySelector('form').addEventListener('submit', function(event) {
-          let hasEmptyField = false;
-          const itemProperties = document.querySelectorAll('input[name="item_properties"]');
-          
-          // Check if any item_property field is empty before submission
-          itemProperties.forEach(input => {
-            if (!input.value) {
-              hasEmptyField = true;
+          const isPrivateCheckbox = document.getElementById('is_private');
+          const passwordField = document.getElementById('showPassword');
+
+          isPrivateCheckbox.addEventListener('change', function() {
+            passwordField.disabled = !this.checked;
+            if (!this.checked) {
+              passwordField.value = '';
             }
           });
-
-          // Prevent form submission if any fields are empty
-          if (hasEmptyField) {
-            alert('Please fill in all fields.');
-            event.preventDefault();
-          }
         });
-      });

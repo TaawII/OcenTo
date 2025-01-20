@@ -1,36 +1,50 @@
 extends ../layout
 
 block content
-  .page-header
-    h1 Moje wydarzenia
-
   doctype html
   html
     head
       link(rel="stylesheet", href="/stylesheets/panel/user-events/style.css")
+      script(src="/javascripts/delete-event.js")
+      script(src="/javascripts/change-status.js")
     body
-  //- Tabela z nagłówkami kolumn
-  table
-    thead
-      tr
-        th Tytuł
-        th Status
-        th Start
-        th Koniec
-        th Akcje
-    tbody
-      each event in events
-        tr
-          td #{event.title}
-          td #{event.status}
-          td #{event.start_time}
-          td #{event.end_time}
-          td
-            a.btn-details(href=`/panel/events/${event.id}`) Szczegóły
-            a.btn-edit(href=`/panel/events/${event.id}/edit`) Edycja
-            a.btn-stats(href=`/panel/events/${event.id}/edit`) Statystyki - niedokończone
-            a.btn-items-list(href=`/panel/events/${event.id}/items`) Menedżer przedmiotów
+      .form-header
+        h2 Moje wydarzenia
+      table
+        thead
+          tr
+            th Tytuł
+            th Status
+            th Start
+            th Koniec
+            th Akcje
+            th Zmień status
+        tbody
+          each event in events
+            tr
+              td #{event.title}
+              td
+                if event.status === 'Active'
+                  | Aktywny
+                else if event.status === 'End'
+                  | Zakończony
+                else if event.status === 'Waiting'
+                  | Oczekujący
+                else
+                  | #{event.status}
+              td #{event.start_time}
+              td #{event.end_time}
+              td
+                a.btn-details(href=`/panel/events/${event.id}`) Szczegóły
+                a.btn-items-list(href=`/panel/events/${event.id}/items`) Menedżer przedmiotów
+                a.btn-edit(href=`/panel/events/${event.id}/edit`) Edycja
+                a.btn-delete(href="#" data-event-id=`${event.id}`) Usuń wydarzenie
+              td
+                if event.status === 'Active'
+                  a.btn-change-status(href="#" data-event-id=`${event.id}` data-new-status="End") Zakończ
+                else
+                  a.btn-change-status(href="#" data-event-id=`${event.id}` data-new-status="Active") Aktywuj
 
-  //- Jeżeli nie ma wydarzeń
-  if events.length === 0
-    p Nie masz żadnych wydarzeń.
+      //- Jeżeli nie ma wydarzeń
+      if events.length === 0
+        p Nie masz żadnych wydarzeń.
