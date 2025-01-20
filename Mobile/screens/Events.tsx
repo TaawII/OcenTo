@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, Alert, Modal, FlatList, TextInput, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, Alert, Modal, FlatList, TextInput, ActivityIndicator, RefreshControl } from 'react-native';
 import { getEvents, isPermissionToShowItems, joinEvent } from '../api/events';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
@@ -22,25 +22,35 @@ export default function EventList() {
   const [itemJoin, setItemJoin] = useState<any>(null);
   const [passwordError, setPasswordError] = useState('');
   const [loading, setLoading] = useState(true); // Stan ładowania
+  const [refreshing, setRefreshing] = useState(false); // Stan odświeżania
+
+  // Funkcja ładowania danych
+  const loadData = async () => {
+    setLoading(true); // Rozpocznij ładowanie
+    try {
+      const result = await getEvents();
+      setEvents(result);
+
+      const category = ['Wszystkie', ...new Set(result.flatMap(event => event.categories))];
+      setCategoryList(category);
+    } catch (error) {
+      console.error('Błąd ładowania danych:', error);
+      Alert.alert('Błąd', 'Wystąpił błąd podczas ładowania danych.');
+    } finally {
+      setLoading(false); // Zakończ ładowanie
+    }
+  };
+
+  // Funkcja obsługująca odświeżanie
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  };
 
   useFocusEffect(
     React.useCallback(() => {
-      const load = async () => {
-        setLoading(true); // Rozpocznij ładowanie
-        try {
-          const result = await getEvents();
-          setEvents(result);
-
-          const category = ['Wszystkie', ...new Set(result.flatMap(event => event.categories))];
-          setCategoryList(category);
-        } catch (error) {
-          console.error('Błąd ładowania danych:', error);
-          Alert.alert('Błąd', 'Wystąpił błąd podczas ładowania danych.');
-        } finally {
-          setLoading(false); // Zakończ ładowanie
-        }
-      };
-      load();
+      loadData(); // Załaduj dane przy fokusie komponentu
     }, [])
   );
 
@@ -101,7 +111,6 @@ export default function EventList() {
     setItemJoin(null);
   };
 
-
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -129,7 +138,9 @@ export default function EventList() {
         </View>
       </View>
 
-      <ScrollView>
+      <ScrollView
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
         <Modal visible={modalVisible} animationType="slide" transparent={true} onRequestClose={() => setModalVisible(false)}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
@@ -195,7 +206,6 @@ export default function EventList() {
           </View>
         </Modal>
 
-        {/* <Text style={styles.header}>Lista wydarzeń</Text> */}
         {filteredEvents.map((item) => (
           <TouchableOpacity key={item.id} onPress={() => checkPermissions(item)}>
             <View style={styles.eventCard}>
@@ -204,10 +214,10 @@ export default function EventList() {
                   <Text style={styles.lockIcon}>🔒</Text>
                 </View>
               )}
-                <Image
-                  source={{ uri: `data:image/png;base64,${item.image}` }}
-                  style={styles.eventImage}
-                />
+              <Image
+                source={{ uri: `data:image/png;base64,${item.image}` }}
+                style={styles.eventImage}
+              />
               <View style={styles.eventDetails}>
                 <Text style={styles.eventTitle}>{item.title}</Text>
                 <Text style={styles.eventDate}>Rozpoczęcie: {formatDate(item.start_time)}</Text>
@@ -365,7 +375,7 @@ const styles = StyleSheet.create({
   modalItemText: {
     fontSize: 18,
     color: '#333',
-    textAlign: 'center', //wyśrodkowanie elementów w modalu
+    textAlign: 'center',
   },
   modalCloseButton: {
     marginTop: 20,

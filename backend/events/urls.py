@@ -6,7 +6,7 @@ from .views import RegisterView, LoginView, MobileEventsListView, OwnerEventsLis
     EventItemsView, AdminItemRatingsView, EventDeleteView, ItemDeleteView, AdminDeleteRatingAndCommentView, \
     AdminDeleteCommentView, AddItemToEventView, OwnerEventItemsView, OwnerDeleteItemView, ItemEditView, \
     OwnerItemReviewsView, OwnerDeleteCommentView, OwnerDeleteRatingView, MobileDeleteRatingView, \
-    OwnerDeleteEventView, OwnerChangeEventStatusView, JoinEventQRView, JoinEventQRView, 
+    OwnerDeleteEventView, OwnerChangeEventStatusView, JoinEventQRView
 
 
 # Zapisujcie wszystkie url w całosci z małych liter: np. zamiast MobileEventsList używajcie mobileeventslist
