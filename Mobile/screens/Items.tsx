@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, Alert, Modal, FlatList, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, Alert, Modal, FlatList, ActivityIndicator, RefreshControl } from 'react-native';
 import { getItems } from '../api/events';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, RouteProp, useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -19,6 +19,7 @@ export default function EventList() {
   const [modalVisible, setModalVisible] = useState(false);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [sortBy, setSortBy] = useState<'name' | 'rating'>('name');
+  const [refreshing, setRefreshing] = useState(false);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -38,6 +39,18 @@ export default function EventList() {
     }, [eventId])
   );
 
+  const onRefresh = async () => {
+    if (loading || refreshing) return;
+    setRefreshing(true);
+    try {
+      const result = await getItems(eventId);
+      setItems(result);
+    } catch (error) {
+      console.error("Błąd ładowania danych:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
   const sortItems = (order: 'asc' | 'desc', by: 'name' | 'rating') => {
     const sortedItems = [...itemsList.items].sort((a, b) => {
       if (by === 'name') {
@@ -76,17 +89,24 @@ export default function EventList() {
     );
   }
 
-if (itemsList && ["Waiting"].includes(itemsList.status)) {
+  if (itemsList && ["Waiting"].includes(itemsList.status)) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text style={styles.loadingText}>Ten event jeszcze się nie rozpoczął 🤔</Text>
+        <ScrollView
+          contentContainerStyle={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        >
+          <Text style={styles.loadingText}>Ten event jeszcze się nie rozpoczął 🤔</Text>
+        </ScrollView>
       </View>
     );
   }
-
+  
   return (
     <View style={styles.container}>
-      <ScrollView>
+      <ScrollView
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
         {!loading && itemsList && itemsList.items.length > 0 && (
           <TouchableOpacity style={styles.sortButton} onPress={toggleModal}>
             <Text style={styles.sortButtonText}>Sortuj</Text>
@@ -103,18 +123,18 @@ if (itemsList && ["Waiting"].includes(itemsList.status)) {
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>Wybierz sortowanie</Text>
-              <TouchableOpacity onPress={() => { sortItems('asc', 'name'); toggleModal(); }}>
+              <TouchableOpacity onPress={() => { sortItems('asc', 'name'); toggleModal(); }} >
                 <Text style={[styles.modalOption, sortOrder === 'asc' && sortBy === 'name' && styles.selectedOption]}>Sortuj rosnąco po nazwie</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => { sortItems('desc', 'name'); toggleModal(); }}>
+              <TouchableOpacity onPress={() => { sortItems('desc', 'name'); toggleModal(); }} >
                 <Text style={[styles.modalOption, sortOrder === 'desc' && sortBy === 'name' && styles.selectedOption]}>Sortuj malejąco po nazwie</Text>
               </TouchableOpacity>
               {itemsList && ["End", "ActiveWithRanking"].includes(itemsList.status) && (
                 <>
-                  <TouchableOpacity onPress={() => { sortItems('asc', 'rating'); toggleModal(); }}>
+                  <TouchableOpacity onPress={() => { sortItems('asc', 'rating'); toggleModal(); }} >
                     <Text style={[styles.modalOption, sortOrder === 'asc' && sortBy === 'rating' && styles.selectedOption]}>Sortuj rosnąco po ocenie</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={() => { sortItems('desc', 'rating'); toggleModal(); }}>
+                  <TouchableOpacity onPress={() => { sortItems('desc', 'rating'); toggleModal(); }} >
                     <Text style={[styles.modalOption, sortOrder === 'desc' && sortBy === 'rating' && styles.selectedOption]}>Sortuj malejąco po ocenie</Text>
                   </TouchableOpacity>
                 </>
@@ -155,13 +175,6 @@ if (itemsList && ["Waiting"].includes(itemsList.status)) {
                     })}
                     {itemsList && ["End", "ActiveWithRanking"].includes(itemsList.status) && (
                       <Text style={styles.eventDate}>Średnia ocena: {item.average_rating || 0}</Text>
-                      // <Rating
-                      //   ratingCount={5}
-                      //   imageSize={32}
-                      //   startingValue={item.average_rating}
-                      //   fractions={1}
-                      //   readonly={true}
-                      // />
                     )}
                   </View>
                 </View>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TextInput, Image, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, Image, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, RefreshControl } from 'react-native';
 import { Rating } from 'react-native-ratings';
-import { useRoute, RouteProp, useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from "../App";
 import { getItemDetails, addOrModifyItemRating, deleteComment } from '../api/events';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,6 +16,7 @@ const ItemDetailScreen = () => {
     const [userRating, setUserRating] = useState<number>(0);
     const [userComment, setUserComment] = useState<string>('');
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);  // Stan dla odświeżenia
 
     const load = useCallback(async () => {
         try {
@@ -36,6 +37,12 @@ const ItemDetailScreen = () => {
             setLoading(false);
         }
     }, [itemId]);
+
+    // Funkcja obsługująca odświeżenie
+    const onRefresh = useCallback(() => {
+        setRefreshing(true);
+        load().finally(() => setRefreshing(false));  // Ładuje dane ponownie po przeciągnięciu
+    }, [load]);
 
     useFocusEffect(
         React.useCallback(() => {
@@ -71,9 +78,13 @@ const ItemDetailScreen = () => {
 
     return (
         <View style={styles.containerSafe}>
-            <ScrollView style={styles.container}
+            <ScrollView
+                style={styles.container}
                 showsVerticalScrollIndicator={false}
-                showsHorizontalScrollIndicator={false}>
+                showsHorizontalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />  // Dodanie RefreshControl
+                }>
                 <Text style={styles.header}>{itemData[0].name}</Text>
                 {itemData[0].average_rating !== undefined && itemData[0].average_rating !== null && (
                     <View style={styles.ratingContainer}>
@@ -325,7 +336,6 @@ const styles = StyleSheet.create({
     },
     editButton: {
         backgroundColor: '#f1f1f1',
-        // backgroundColor: '#f9f9f9',
         padding: 10,
         marginTop: 10,
         borderRadius: 10,
