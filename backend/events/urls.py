@@ -5,7 +5,8 @@ from .views import RegisterView, LoginView, MobileEventsListView, OwnerEventsLis
     ItemRatingAddOrModifyView, Decrypt, EventDetailView, EventEditView, UserEventsView, AdminEventsListView, \
     EventItemsView, AdminItemRatingsView, EventDeleteView, ItemDeleteView, AdminDeleteRatingAndCommentView, \
     AdminDeleteCommentView, AddItemToEventView, OwnerEventItemsView, OwnerDeleteItemView, ItemEditView, \
-    OwnerItemReviewsView, OwnerDeleteCommentView, OwnerDeleteRatingView, MobileDeleteRatingView
+    OwnerItemReviewsView, OwnerDeleteCommentView, OwnerDeleteRatingView, JoinEventQRView, JoinEventQRView
+
 
 # Zapisujcie wszystkie url w całosci z małych liter: np. zamiast MobileEventsList używajcie mobileeventslist
 urlpatterns = [
@@ -19,6 +20,7 @@ urlpatterns = [
     path('checkeventmembership', CheckEventMembershipView.as_view(), name='check_event_membership'),
     path('addormodifyrating', ItemRatingAddOrModifyView.as_view(), name='check_event_membership'),
     path('joinevent', JoinEventView.as_view(), name='join_event'),
+    path('joineventqr', JoinEventQRView.as_view(), name='join_event_qr'),
     path('create', CreateEventView.as_view(), name='create_event'),
     path('events/<int:pk>/', EventDetailView.as_view(), name='event-detail'),
     path('events/<int:pk>/edit/', EventEditView.as_view(), name='event-edit'),

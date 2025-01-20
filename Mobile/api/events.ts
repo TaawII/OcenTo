@@ -74,6 +74,25 @@ export const joinEvent = async (eventId: Number, password: string): Promise<any>
   }
 };
 
+// Funkcja umożliwiająca dołaczenie do eventu przy pomocy kodu QR
+export const joinEventQR = async (eventId: Number, password: string): Promise<any> => {
+  try {
+    const response = await axios.post(`${API_URL}/JoinEventQR`, { eventId, password });
+    if (response.status == 200) {
+      if (response.data.success == true) {
+        return { success: true }
+      } else {
+        return { success: false, message: response.data.message }
+      }
+    } else {
+      console.error('Błąd podczas dodawania uzytkownika do danego wydarzenia: ', response.data.error);
+      return { success: false, message: 'Wystąpił nieznany bład, spróbuj ponownie za chwile.' };
+    }
+  } catch (error) {
+    console.error('Nieznany błąd podczas dodawania uzytkownika do danego wydarzenia: ', error);
+    return null;
+  }
+};
 //Funkcja do pobierania szczegółów przedmiotu
 export const getItemDetails = async (itemId: Number): Promise<any[]> => {
   try {

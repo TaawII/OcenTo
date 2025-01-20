@@ -1,11 +1,11 @@
 const axios = require('axios');
 exports.getAllEvents = async (req, res) => {
+  const authToken = req.cookies.auth_token;
+  const serverURL = process.env.serwerURL || '127.0.0.1:8000/api/events'; 
   try {
     // Pobranie wydarzeń z API
-    const response = await axios.get(`http://127.0.0.1:8000/api/events/admin/allevents`, {
-      headers: {
-        Authorization: `Bearer ${req.user.token}`,
-      },
+    const response = await axios.get(`http://${serverURL}/admin/allevents`, {
+      headers: { Authorization: `Bearer ${authToken}` },
     });
 
     // Ustawienia formatowania daty w języku polskim
@@ -49,12 +49,12 @@ exports.getAllEvents = async (req, res) => {
 
 exports.getEvent = async (req, res) => {
   const { id } = req.params;
-  const serverURL = process.env.SERVER_URL || 'http://127.0.0.1:8000'; 
+  const serverURL = process.env.serwerURL || '127.0.0.1:8000/api/events'; 
   const authToken = req.cookies.auth_token;
 
   try {
   
-    const response = await axios.get(`${serverURL}/api/events/admin/allevents/${id}/`, {
+    const response = await axios.get(`http://${serverURL}/admin/allevents/${id}/`, {
       headers: { Authorization: `Bearer ${authToken}` },
     });
 
@@ -95,13 +95,13 @@ exports.getEvent = async (req, res) => {
 
 exports.getEventItems = async (req, res) => {
   const { id } = req.params; // ID wydarzenia
-  const serverURL = process.env.SERVER_URL || 'http://127.0.0.1:8000'; 
+  const serverURL = process.env.serwerURL || '127.0.0.1:8000/api/events'; 
   const authToken = req.cookies.auth_token; 
   console.log(`Fetching items for event ID: ${id}`);
   
   try {
 
-    const response = await axios.get(`${serverURL}/api/events/admin/allevents/${id}/items`, {
+    const response = await axios.get(`http://${serverURL}/admin/allevents/${id}/items`, {
       headers: { Authorization: `Bearer ${authToken}` },
     });
     const items = response.data.items;
@@ -120,12 +120,12 @@ exports.getEventItems = async (req, res) => {
 
 exports.getItemRatings = async (req, res) => {
   const { eventId, itemId } = req.params;
-  const serverURL = process.env.SERVER_URL || 'http://127.0.0.1:8000';
+  const serverURL = process.env.serwerURL || '127.0.0.1:8000/api/events'; 
   const authToken = req.cookies.auth_token; 
 
   try {
 
-      const response = await axios.get(`${serverURL}/api/events/admin/allevents/${eventId}/items/${itemId}/ratings/`, {
+      const response = await axios.get(`http://${serverURL}/admin/allevents/${eventId}/items/${itemId}/ratings/`, {
           headers: { Authorization: `Bearer ${authToken}` },
       });
 
@@ -147,11 +147,11 @@ exports.getItemRatings = async (req, res) => {
 };
 exports.deleteEvent = async (req, res) => {
   const { id } = req.params; // ID wydarzenia
-  const serverURL = process.env.SERVER_URL || 'http://127.0.0.1:8000'; 
+  const serverURL = process.env.serwerURL || '127.0.0.1:8000/api/events'; 
   const authToken = req.cookies.auth_token; 
 
   try {
-    const response = await axios.delete(`${serverURL}/api/events/admin/allevents/${id}/delete/`, {
+    const response = await axios.delete(`http://${serverURL}/admin/allevents/${id}/delete/`, {
       headers: { Authorization: `Bearer ${authToken}` },
     });
 
@@ -169,11 +169,11 @@ exports.deleteEvent = async (req, res) => {
 
 exports.deleteItem = async (req, res) => {
   const { eventId, itemId } = req.params;
-  const serverURL = process.env.SERVER_URL || 'http://127.0.0.1:8000'; 
+  const serverURL = process.env.serwerURL || '127.0.0.1:8000/api/events'; 
   const authToken = req.cookies.auth_token; 
 
   try {
-    const response = await axios.delete(`${serverURL}/api/events/admin/allevents/${eventId}/items/${itemId}/delete/`, {
+    const response = await axios.delete(`http://${serverURL}/admin/allevents/${eventId}/items/${itemId}/delete/`, {
       headers: { Authorization: `Bearer ${authToken}` },
     });
 
@@ -191,12 +191,12 @@ exports.deleteItem = async (req, res) => {
 
 exports.deleteRatingAndComment = async (req, res) => {
   const { eventId, itemId, ratingId } = req.params; 
-  const serverURL = process.env.SERVER_URL || 'http://127.0.0.1:8000'; 
+  const serverURL = process.env.serwerURL || '127.0.0.1:8000/api/events';  
   const authToken = req.cookies.auth_token; 
 
   try {
     const response = await axios.delete(
-      `${serverURL}/api/events/admin/allevents/${eventId}/items/${itemId}/ratings/${ratingId}/delete/`,
+      `http://${serverURL}/admin/allevents/${eventId}/items/${itemId}/ratings/${ratingId}/delete/`,
       {
         headers: { Authorization: `Bearer ${authToken}` },
       }
@@ -216,12 +216,12 @@ exports.deleteRatingAndComment = async (req, res) => {
 
 exports.deleteComment = async (req, res) => {
   const { eventId, itemId, ratingId } = req.params;
-  const serverURL = process.env.SERVER_URL || 'http://127.0.0.1:8000';
+  const serverURL = process.env.serwerURL || '127.0.0.1:8000/api/events'; 
   const authToken = req.cookies.auth_token;
 
   try {
     const response = await axios.patch(
-      `${serverURL}/api/events/admin/allevents/${eventId}/items/${itemId}/ratings/${ratingId}/delete-comment/`,
+      `http://${serverURL}/api/events/admin/allevents/${eventId}/items/${itemId}/ratings/${ratingId}/delete-comment/`,
       {}, // Nie wysyłamy żadnego payload
       { headers: { Authorization: `Bearer ${authToken}` } }
     );

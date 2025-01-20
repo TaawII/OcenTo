@@ -3,7 +3,7 @@ const router = express.Router();
 const adminController = require('../controllers/admin-controller');
 const { isAdmin } = require('../utils/auth');
 
-router.get('/allevents', isAdmin, adminController.getAllEvents);
+router.get('/allevents', adminController.getAllEvents);
 router.delete('/allevents/:id', adminController.deleteEvent);
 router.get('/allevents/:id', adminController.getEvent);
 router.get('/allevents/:id/items', adminController.getEventItems);

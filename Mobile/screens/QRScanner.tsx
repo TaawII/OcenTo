@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Text, View, StyleSheet, Button, Alert } from "react-native";
 import { CameraView, Camera } from "expo-camera";
-import { joinEvent, isPermissionToShowItems } from '../api/events';
+import { joinEventQR, isPermissionToShowItems } from '../api/events';
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../App";
@@ -27,9 +27,11 @@ export default function QRScanner() {
         if (isPermissions === true) {
           navigation.navigate("Items", { eventId: data.id });
         } else if (isPermissions === false) {
-            const isJoin = await joinEvent(data.id, data.password);
+            const isJoin = await joinEventQR(data.id, data.password);
             if (isJoin.success === true) {
                 navigation.navigate("Items", { eventId: data.id });
+            }else{
+                Alert.alert(`Niepoprawny kod qr`);
             }
         } else {
           Alert.alert('Błąd', 'Wystąpił nieznany problem, spróbuj ponownie za chwile.');
@@ -41,7 +43,7 @@ export default function QRScanner() {
         try {
             const dataParse = JSON.parse(data);
             if (dataParse.id !== undefined && dataParse.password !== undefined) {
-                checkPermissions(dataParse)
+                await checkPermissions(dataParse)
             } else {
                 Alert.alert(`Niepoprawny kod qr`);
             }
