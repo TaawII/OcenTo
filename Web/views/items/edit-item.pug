@@ -1,0 +1,34 @@
+extends ../layout
+
+block content
+  doctype html
+  html
+    head
+      link(rel="stylesheet", href="/stylesheets/items/edit-items.css")
+    body
+      .form-header
+        h2 Edycja przedmiotu
+
+      form(method="post" action=`/panel/events/${item.event}/items/${item.id}/edit` enctype="multipart/form-data")
+        input(type="hidden" name="_method" value="PUT")
+
+        .field-row
+          label(for="name") Nazwa przedmiotu
+          input(type="text" id="name" name="name" value=item.name required)
+
+        #item-values-container
+          each value, index in item.item_values
+            .field-row
+              label(for=`item_values_${index}`) #{itemProperties[index] || `Wartość ${index + 1}`}
+              input(type="text" id=`item_values_${index}` name="item_values[]" value=value placeholder=defaultValues[index])
+
+        if item.image
+          .field-row
+            label Obecny obraz
+            img(src=`data:image/png;base64,${item.image.toString('base64')}` alt='Obrazek itemu' class="current-image")
+
+        .field-row
+          label(for="image") Zmień obraz (opcjonalnie)
+          input(type="file" id="image" name="image")
+
+        button(type="submit") Zapisz zmiany

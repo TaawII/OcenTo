@@ -46,9 +46,16 @@ const AppNavigator: React.FC = () => {
           <Stack.Screen
             name="Events"
             component={Events}
-            options={{
+            options={({ navigation }) => ({
               headerShown: true,
-              headerLeft: () => null,
+              headerLeft: () => (
+                <TouchableOpacity
+                  style={styles.scannerButton} // Nowy styl dla przycisku
+                  onPress={() => navigation.navigate("QRScanner")}
+                >
+                  <Text>📷</Text>
+                </TouchableOpacity>
+              ),
               headerTitleAlign: 'center',
               title: "OcenTo",
               headerRight: () => (
@@ -56,7 +63,7 @@ const AppNavigator: React.FC = () => {
                   <Text style={styles.logoutButtonText}>Wyloguj</Text>
                 </TouchableOpacity>
               ),
-            }}
+            })}
           />
           <Stack.Screen
             name="Items"
@@ -89,9 +96,9 @@ const AppNavigator: React.FC = () => {
             name="QRScanner"
             component={QRScanner}
             options={{
-              headerShown: false,
-              title: "QRScanner",
-              headerLeft: () => null,
+              headerShown: true,
+              headerTitleAlign: 'center',
+              title: "Zeskanuj kod QR",
             }}
           />
         </>
@@ -132,6 +139,17 @@ const App: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  scannerButton: {
+    padding: 10,
+    backgroundColor: '#FF6347',
+    borderRadius: 50,
+    marginLeft: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 5,
+  },
   logoutButton: {
     paddingHorizontal: 15,
     paddingVertical: 8,

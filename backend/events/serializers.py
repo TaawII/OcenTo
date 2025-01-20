@@ -124,14 +124,14 @@ class EventEditSerializer(serializers.ModelSerializer):
 
 class MobileItemEventSerializer(serializers.ModelSerializer):
     average_rating = serializers.SerializerMethodField()
-
+    
     class Meta:
         model = Item
-        fields = ['id', 'nazwa', 'item_values', 'image', 'average_rating']
+        fields = ['id', 'name', 'item_values', 'image', 'average_rating']
 
     def get_average_rating(self, obj):
         event = obj.event
-        if event.status == "END":
+        if event.status in ["End", "ActiveWithRanking"]:
             average_rating = ItemRating.objects.filter(item=obj).aggregate(Avg('rating_value'))['rating_value__avg']
             logger.debug(f"Średnia ocena dla obiektu {obj.id}: {average_rating}")
             return average_rating if average_rating is not None else 0.0
@@ -190,3 +190,16 @@ class AdminItemRatingSerializer(serializers.ModelSerializer):
     class Meta:
         model = ItemRating
         fields = ['id', 'user', 'item', 'rating_value', 'comment']
+        
+class ItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Item
+        fields = ['id', 'name', 'item_values', 'event', 'image']
+
+    # Walidacja danych 'item_values'
+    def validate_item_values(self, value):
+        # Zapewnia, że 'item_values' jest listą odpowiadającą 'item_properties'
+        if not isinstance(value, list):
+            raise serializers.ValidationError('Item values must be a list.')
+
+        return value

@@ -1,4 +1,4 @@
-extends layout
+extends ../layout
 
 block content
   .page-header
@@ -51,6 +51,8 @@ block content
           a.btn-edit(href=`/panel/events/${event.id}/edit`) Edit Event
           a.btn-back(href="/panel/events") Back to Events
 
+
+        img(src=qrCode alt="QR Code")
 
 
 

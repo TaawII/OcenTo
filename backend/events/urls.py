@@ -4,7 +4,8 @@ from .views import RegisterView, LoginView, MobileEventsListView, OwnerEventsLis
     MobileItemsListView, CheckEventMembershipView, JoinEventView, VerifyTokenView, MobileItemDetailsView, \
     ItemRatingAddOrModifyView, Decrypt, EventDetailView, EventEditView, UserEventsView, AdminEventsListView, \
     EventItemsView, AdminItemRatingsView, EventDeleteView, ItemDeleteView, AdminDeleteRatingAndCommentView, \
-    AdminDeleteCommentView
+    AdminDeleteCommentView, AddItemToEventView, OwnerEventItemsView, OwnerDeleteItemView, ItemEditView, \
+    OwnerItemReviewsView, OwnerDeleteCommentView, OwnerDeleteRatingView
 
 # Zapisujcie wszystkie url w całosci z małych liter: np. zamiast MobileEventsList używajcie mobileeventslist
 urlpatterns = [
@@ -32,4 +33,12 @@ urlpatterns = [
     path('admin/allevents/<int:pk>/items/<int:item_id>/delete/', ItemDeleteView.as_view(), name='delete-item'),
     path('admin/allevents/<int:pk>/items/<int:item_id>/ratings/<int:rating_id>/delete/',AdminDeleteRatingAndCommentView.as_view(),name='delete-rating-comment',),
     path('admin/allevents/<int:pk>/items/<int:item_id>/ratings/<int:rating_id>/delete-comment/',AdminDeleteCommentView.as_view(),name='delete-comment',),
+    path('<int:event_id>/add-item/', AddItemToEventView.as_view(), name='add-item-to-event'),
+    path('<int:event_id>/items/', OwnerEventItemsView.as_view(), name='owner_event_items'),
+    path('<int:event_id>/items/<int:item_id>/delete', OwnerDeleteItemView.as_view(), name='delete_item'),
+    path('<int:event_id>/items/<int:item_id>/edit', ItemEditView.as_view(), name='item_edit'),
+    path('<int:event_id>/items/<int:item_id>/reviews', OwnerItemReviewsView.as_view(), name='item_reviews'),
+    path('<int:event_id>/items/<int:item_id>/reviews/<int:rating_id>/delete-comment', OwnerDeleteCommentView.as_view(), name='delete_comment'),
+    path('<int:event_id>/items/<int:item_id>/reviews/<int:rating_id>/delete', OwnerDeleteRatingView.as_view(), name='delete_rating'),
+
 ]

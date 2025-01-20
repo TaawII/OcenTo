@@ -21,11 +21,10 @@ const ItemDetailScreen = () => {
         try {
             setLoading(true);
             const result = await getItemDetails(itemId);
-            console.log(result)
             setItemData(result)
-            if (result[2] && result[2] !== null) {
-                setUserRating(result[2].rating_value || 0);
-                setUserComment(result[2].comment || 0);
+            if (result[4] && result[4] !== null) {
+                setUserRating(result[4].rating_value || 0);
+                setUserComment(result[4].comment || 0);
             }
         } catch (error) {
             console.error("Błąd ładowania danych:", error)
@@ -64,13 +63,11 @@ const ItemDetailScreen = () => {
     };
 
     return (
-        <SafeAreaView style={styles.containerSafe}>
+        <View style={styles.containerSafe}>
             <ScrollView style={styles.container}
                 showsVerticalScrollIndicator={false}
                 showsHorizontalScrollIndicator={false}>
-                <Text style={styles.header}>{itemData[0].nazwa}</Text>
-
-                {/* Display average rating if it exists */}
+                <Text style={styles.header}>{itemData[0].name}</Text>
                 {itemData[0].average_rating !== undefined && itemData[0].average_rating !== null && (
                     <View style={styles.ratingContainer}>
                         <View style={styles.ratingRowAverage}>
@@ -87,13 +84,18 @@ const ItemDetailScreen = () => {
                     </View>
                 )}
 
-                <Image
-                    style={styles.image}
-                    source={{ uri: `data:image/png;base64,${itemData[0].image}` || 'https://via.placeholder.com/300' }}
-                />
-                <Text style={styles.label}>Attributes:</Text>
+                {itemData[0].image && (
+                    <Image
+                        style={styles.image}
+                        source={{ uri: `data:image/png;base64,${itemData[0].image}` }}
+                    />
+                )}
+                <Text style={styles.label}>Atrybuty:</Text>
                 {itemData[0].item_values.map((value: any, index: any) => (
-                    <Text key={index} style={styles.attribute}>{value}</Text>
+                    <View key={index} style={styles.attributeRow}>
+                        <Text style={styles.attribute}>{itemData[2][index]}:</Text>
+                        <Text style={styles.attributeValue}> {value ? value : itemData[3][index]}</Text>
+                    </View>
                 ))}
 
                 {/* Editable Rating and Comment Section */}
@@ -101,6 +103,7 @@ const ItemDetailScreen = () => {
                     <View style={styles.ratingRow}>
                         <Text style={styles.ratingText}>Twoja ocena:</Text>
                         <Rating
+                            tintColor="#f9f9f9"
                             ratingCount={5}
                             fractions={1}
                             jumpValue={0.1}
@@ -123,11 +126,11 @@ const ItemDetailScreen = () => {
                     />
                     {editable ? (
                         <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                            <Text style={styles.buttonText}>Save</Text>
+                            <Text style={styles.buttonText}>Zapisz</Text>
                         </TouchableOpacity>
                     ) : (
                         <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
-                            <Text style={styles.buttonText}>Edit</Text>
+                            <Text style={styles.buttonText}>Edytuj komentarz</Text>
                         </TouchableOpacity>
                     )}
                 </View>
@@ -141,12 +144,10 @@ const ItemDetailScreen = () => {
                             <View style={styles.ratingRow}>
                                 <Text style={styles.username}>{comment.user}</Text>
                                 <Rating
-                                    ratingBackgroundColor="#f9f9f9"
-                                    type="star"
+                                    tintColor="#f9f9f9"
                                     startingValue={comment.rating_value}
                                     readonly
                                     imageSize={24}
-                                    style={styles.rating}
                                 />
                                 <Text style={styles.ratingTextRight}>{comment.rating_value.toFixed(1)}</Text>
                             </View>
@@ -164,7 +165,7 @@ const ItemDetailScreen = () => {
                     </View>
                 ))}
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 };
 
@@ -173,6 +174,7 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#fff',
         padding: 10,
+        paddingTop: 0,
     },
     container: {
         flex: 1,
@@ -181,22 +183,31 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: 'bold',
         textAlign: 'center',
-        marginBottom: 10,
+        padding: 5,
     },
     image: {
         width: '100%',
-        height: 200,
         borderRadius: 10,
         marginBottom: 10,
+        aspectRatio: 16 / 9,
+        resizeMode: 'contain',
     },
     label: {
         fontSize: 16,
         fontWeight: 'bold',
         marginTop: 10,
     },
+    attributeRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: 4,
+    },
     attribute: {
-        fontSize: 14,
-        marginVertical: 2,
+        fontWeight: 'bold',
+        marginRight: 4,
+    },
+    attributeValue: {
+        color: '#333',
     },
     buttonText: {
         fontSize: 16,
@@ -252,6 +263,16 @@ const styles = StyleSheet.create({
     },
     editableSection: {
         marginVertical: 20,
+        padding: 10,
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 10,
+        backgroundColor: '#f9f9f9',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+        elevation: 2,
     },
     commentInput: {
         borderWidth: 1,
