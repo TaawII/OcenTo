@@ -18,6 +18,9 @@ router.post('/events/:id/edit', eventsController.editEvent);
 // Usuwanie wydarzenia
 router.delete('/events/:eventId/delete', eventsController.deleteEvent);
 
+// Zmiana statusu wydarzenia
+router.post('/events/:eventId/change-status', eventsController.changeEventStatus);
+
 // Trasa GET dla itemów wydarzenia
 router.get('/events/:event_id/items', itemsController.getEventItems);
 

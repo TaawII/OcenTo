@@ -25,7 +25,7 @@ table {
   }
   
   /* Styl dla przycisków w kolumnie Akcje */
-  a.btn-details, a.btn-edit, a.btn-items-list, a.btn-delete {
+  a.btn-details, a.btn-edit, a.btn-items-list, a.btn-delete, a.btn-change-status {
     display: inline-block;
     padding: 8px 15px;
     margin-right: 10px;
@@ -68,6 +68,15 @@ table {
     
   a.btn-delete:hover {
     background-color: #e53935;
+  }
+
+  a.btn-change-status {
+    background-color: #6c757d;
+    color: white;
+  }
+    
+  a.btn-change-status:hover {
+    background-color: #5a6268;
   }
 
   /* Dodatkowe style dla nagłówków */

@@ -711,3 +711,21 @@ class OwnerDeleteEventView(APIView):
         # Usuń wydarzenie (kaskadowo usunie wszystkie powiązane elementy: itemy, oceny itp.)
         event.delete()
         return Response({"message": "Wydarzenie zostało pomyślnie usunięte."}, status=status.HTTP_200_OK)
+    
+class OwnerChangeEventStatusView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, event_id):
+        event = get_object_or_404(Event, id=event_id)
+
+        if event.owner != request.user:
+            return Response({"error": "Nie masz uprawnień do zmiany statusu tego wydarzenia."}, status=403)
+
+        new_status = request.data.get('status')
+        if new_status not in ['Active', 'End']:
+            return Response({"error": "Nieprawidłowy status."}, status=400)
+
+        event.status = new_status
+        event.save()
+
+        return Response({"message": "Status wydarzenia został zaktualizowany pomyślnie.", "new_status": event.status}, status=200)

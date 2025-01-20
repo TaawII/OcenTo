@@ -9,6 +9,7 @@ block content
     head
       link(rel="stylesheet", href="/stylesheets/panel/user-events/style.css")
       script(src="/javascripts/delete-event.js")
+      script(src="/javascripts/change-status.js")
     body
   //- Tabela z nagłówkami kolumn
   table
@@ -31,6 +32,8 @@ block content
             a.btn-items-list(href=`/panel/events/${event.id}/items`) Menedżer przedmiotów
             a.btn-edit(href=`/panel/events/${event.id}/edit`) Edycja
             a.btn-delete(href="#" data-event-id=`${event.id}`) Usuń wydarzenie
+            a.btn-change-status(href="#" data-event-id=`${event.id}` data-new-status="Active") Aktywuj
+            a.btn-change-status(href="#" data-event-id=`${event.id}` data-new-status="End") Zakończ
 
   //- Jeżeli nie ma wydarzeń
   if events.length === 0
