@@ -1,0 +1,134 @@
+/* Styl kontenera */
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(120deg, #8e44ad, #6c63ff);
+  }
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: auto;
+    background: #2c2c54;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    color: #fff;
+    animation: fadeIn 0.8s ease-in-out;
+  }
+  
+  /* Nagłówki */
+  h1 {
+    text-align: center;
+    color: #fff;
+    margin-top: 2rem;
+    font-size: 2rem;
+  }
+  
+  h2 {
+    margin-bottom: 1rem;
+    color: #ddd;
+  }
+  
+  /* Tabela */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+  
+  table th, table td {
+    padding: 15px;
+    text-align: left;
+    color: #ddd;
+    border-bottom: 1px solid #6c63ff;
+  }
+  
+  table thead tr {
+    background: linear-gradient(90deg, #6c63ff, #8e44ad);
+    color: #fff;
+  }
+  
+  table tbody tr:hover {
+    background: rgba(140, 82, 255, 0.2);
+    transition: background 0.3s ease;
+  }
+  
+  /* Akcje */
+  .actions {
+    display: flex;
+    gap: 10px;
+  }
+  
+  /* Przyciski */
+  .btn-details {
+    display: inline-block;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #fff;
+    text-decoration: none;
+    background: #6c63ff;
+    border-radius: 5px;
+    text-align: center;
+    transition: background 0.3s ease, transform 0.2s ease;
+  }
+  
+  .btn-details:hover {
+    background: #4b4ecb;
+    transform: translateY(-2px);
+  }
+  
+  .btn-danger {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #fff;
+    background: #e74c3c;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease;
+  }
+  
+  .btn-danger:hover {
+    background: #c0392b;
+    transform: translateY(-2px);
+  }
+  
+  /* Przycisk powrotu */
+  .back-button {
+    display: inline-block;
+    margin-top: 2rem;
+    padding: 10px 20px;
+    background: linear-gradient(120deg, #6c63ff, #8e44ad);
+    color: #fff;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 5px;
+    text-align: center;
+    transition: background 0.3s ease, transform 0.2s ease;
+  }
+  
+  .back-button:hover {
+    background: linear-gradient(120deg, #8e44ad, #6c63ff);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Animacja fade-in */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  

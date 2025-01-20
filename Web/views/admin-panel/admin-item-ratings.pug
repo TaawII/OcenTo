@@ -1,0 +1,36 @@
+doctype html
+html
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title Panel Admina - Oceny
+    link(rel="stylesheet", href="/stylesheets/admin/ratings/style.css")
+  body
+    .container
+      h1 Panel Admina - Oceny i Komentarze
+
+      if ratings.length === 0
+        p Brak ocen i komentarzy dla tego przedmiotu.
+      else
+        table
+          thead
+            tr
+              th Użytkownik
+              th Ocena
+              th Komentarz
+              th Akcja
+          tbody
+            each rating in ratings
+              tr
+                td= rating.user
+                td= rating.rating_value ? `${rating.rating_value}/5` : "Brak oceny"
+                td= rating.comment || "Brak komentarza"
+                td
+                  .action-buttons
+                    form(method="post", action=`/admin/allevents/${eventId}/items/${itemId}/ratings/${rating.id}?_method=DELETE`)
+                      button.btn-delete-rating(type="submit") Usuń komentarz i ocenę
+
+                    form(method="post", action=`/admin/allevents/${eventId}/items/${itemId}/ratings/${rating.id}/delete-comment?_method=DELETE`)
+                      button.btn-delete-comment(type="submit") Usuń komentarz
+
+      a.back-button(href=`/admin/allevents/${eventId}/items`) Powrót do listy przedmiotów

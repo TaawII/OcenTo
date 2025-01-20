@@ -1,0 +1,112 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(120deg, #8e44ad, #6c63ff);
+  }
+/* Styl kontenera */
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: auto;
+    background: #2c2c54;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    color: #fff;
+    animation: fadeIn 0.8s ease-in-out;
+  }
+  
+  /* Tabela */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+  
+  table th, table td {
+    padding: 15px;
+    text-align: left;
+    color: #ddd;
+    border-bottom: 1px solid #6c63ff;
+  }
+  
+  table tbody tr:hover {
+    background: rgba(140, 82, 255, 0.2);
+    transition: background 0.3s ease;
+  }
+  
+  /* Styl akcji */
+  .actions {
+    display: flex;
+    gap: 10px;
+  }
+  
+  /* Przyciski */
+  .btn {
+    display: inline-block;
+    padding: 10px 15px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #fff;
+    text-decoration: none;
+    border: none;
+    border-radius: 5px;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease;
+  }
+  
+  .btn-danger {
+    background: #e74c3c;
+  }
+  
+  .btn-danger:hover {
+    background: #c0392b;
+    transform: translateY(-2px);
+  }
+  
+  .btn-primary {
+    background: #6c63ff;
+  }
+  
+  .btn-primary:hover {
+    background: #4b4ecb;
+    transform: translateY(-2px);
+  }
+  
+  a.back-button {
+    display: inline-block;
+    margin-top: 2rem;
+    padding: 10px 20px;
+    background: linear-gradient(120deg, #6c63ff, #8e44ad);
+    color: #fff;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 5px;
+    text-align: center;
+    transition: background 0.3s ease, transform 0.2s ease;
+  }
+  
+  a.back-button:hover {
+    background: linear-gradient(120deg, #8e44ad, #6c63ff);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Animacja fade-in */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  

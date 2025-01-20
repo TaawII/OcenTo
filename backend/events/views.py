@@ -1,15 +1,18 @@
 from django.contrib.auth.hashers import make_password, check_password
+from rest_framework.generics import ListCreateAPIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework import status
+from rest_framework import status, permissions
 from django.db.models import Count
 from django.shortcuts import get_object_or_404
 import logging, base64
 from .models import User, Event, Item, ItemRating
-from .serializers import MobileEventSerializer, OwnerEventSerializer, EventSerializer, ItemSerializer, EventMember, MobileEventItemSerializer, ItemRatingSerializer, ItemDetailSerializer, ItemRatingDetailSerializer, EventEditSerializer
+from .serializers import MobileEventSerializer, OwnerEventSerializer, EventSerializer, ItemSerializer, EventMember, MobileEventItemSerializer, ItemRatingSerializer, ItemDetailSerializer, ItemRatingDetailSerializer, EventEditSerializer, AdminItemRatingSerializer
 from rest_framework.authentication import get_authorization_header
 from io import BytesIO
 from .encryption import decrypt_password, encrypt_password
@@ -128,7 +131,7 @@ class EventDetailView(APIView):
 
     def get(self, request, pk):
         event = get_object_or_404(Event, pk=pk)
-        if event.owner != request.user:
+        if event.owner != request.user and request.user.role != 'admin':  # Sprawdź, czy użytkownik jest adminem
             return Response({"error": "You are not authorized to view this event."}, status=status.HTTP_403_FORBIDDEN)
         serializer = EventSerializer(event)
         return Response(serializer.data)
@@ -292,6 +295,125 @@ class UserEventsView(APIView):
         serializer = EventSerializer(events, many=True)
         return Response(serializer.data)
 
+class IsAdminUser(BasePermission):
+    def has_permission(self, request, view):
+        # Sprawdź, czy użytkownik jest zalogowany i ma rolę 'admin'
+        return request.user.is_authenticated and request.user.role == 'admin'
+
+class AdminEventsListView(APIView):
+    authentication_classes = [JWTAuthentication]  # Dodaj obsługę tokenów JWT
+    permission_classes = [IsAdminUser]  # Wymuś rolę 'admin'
+
+    def get(self, request):
+        print(f"Authorization Header: {request.headers.get('Authorization')}")
+        if not request.user.is_authenticated or request.user.role != 'admin':
+            raise PermissionDenied("Brak dostępu. Tylko administratorzy mogą wyświetlać tę listę.")
+        events = Event.objects.all()
+        serializer = EventSerializer(events, many=True)
+        return Response(serializer.data)
+
+class EventItemsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        event = get_object_or_404(Event, id=pk)
+        if event.owner != request.user and request.user.role != 'admin':
+            return Response(
+                {"error": "You are not authorized to view the items of this event."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        items = Item.objects.filter(event=event)
+        serialized_items = ItemSerializer(items, many=True).data
+        response_data = {
+            "items": serialized_items,
+            "default_values": event.default_values,
+            "item_properties": event.item_properties
+        }
+        print(event.default_values)
+        return Response(response_data)
+
+class AdminItemRatingsView(APIView):
+    permission_classes = [IsAdminUser]  # Dostęp tylko dla administratora
+
+    def get(self, request, pk, item_id):
+        ratings = ItemRating.objects.filter(item__id=item_id, item__event__id=pk)
+        serializer = AdminItemRatingSerializer(ratings, many=True)
+        return Response(serializer.data)
+
+class EventDeleteView(APIView):
+    permission_classes = [IsAuthenticated]  # Uwierzytelnienie wymagane
+
+    def delete(self, request, pk):
+        if request.user.role != 'admin':
+            return Response(
+                {'error': 'You do not have permission to delete events.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        try:
+            event = Event.objects.get(id=pk)
+            event.delete()
+            return Response(
+                {'message': 'Event deleted successfully.'},
+                status=status.HTTP_200_OK
+            )
+        except Event.DoesNotExist:
+            return Response(
+                {'error': 'Event not found.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class ItemDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, pk, item_id, *args, **kwargs):
+        print(f"Received DELETE request for item {item_id} in event {pk}")
+        if not request.user.role == 'admin':
+            return Response({'error': 'Only admins can delete items.'}, status=403)
+
+        try:
+            item = get_object_or_404(Item, event_id=pk, id=item_id)
+            print(f"Found item: {item.name} (ID: {item.id}) for event ID: {pk}")
+
+            item.delete()
+            print(f"Item {item_id} deleted successfully.")
+            return Response({'message': 'Item deleted successfully.'}, status=200)
+
+        except Exception as e:
+            print(f"Error during deletion: {e}")
+            return Response({'error': 'Failed to delete item.'}, status=500)
+
+class AdminDeleteRatingAndCommentView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, pk, item_id, rating_id, *args, **kwargs):
+        if not request.user.role == 'admin':
+            return Response({'error': 'Only admins can delete ratings and comments.'}, status=403)
+        item = get_object_or_404(Item, id=item_id, event_id=pk)
+        rating = get_object_or_404(ItemRating, id=rating_id, item=item)
+        rating.delete()
+        return Response({'message': 'Rating and comment deleted successfully.'}, status=200)
+
+
+class AdminDeleteCommentView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, pk, item_id, rating_id, *args, **kwargs):
+        if not request.user.role == 'admin':
+            return Response({'error': 'Only admins can delete comments.'}, status=403)
+        item = get_object_or_404(Item, id=item_id, event_id=pk)
+        rating = get_object_or_404(ItemRating, id=rating_id, item=item)
+
+        # Usunięcie tylko komentarza
+        rating.comment = None
+        rating.save()
+
+        return Response({'message': 'Comment deleted successfully.'}, status=200)
 
 class AddItemToEventView(APIView):
     permission_classes = [IsAuthenticated]

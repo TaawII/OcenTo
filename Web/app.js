@@ -14,6 +14,7 @@ const loginRouter = require('./routes/login');
 const panelRouter = require('./routes/panel');
 const eventsRouter = require('./routes/events');
 const logoutRouter = require('./routes/logout');
+const adminRoutes = require('./routes/admin');
 
 var app = express();
 
@@ -28,7 +29,11 @@ const PORT = process.env.PORT || 3000;
 // view engine setup
 app.set('view engine', 'pug');
 
-app.set('views', path.join(__dirname, 'views'));
+app.set('views', [
+  path.join(__dirname, 'views'),             // Widoki główne w /views
+  path.join(__dirname, 'views/panel'),       // Widoki w /views/panel
+  path.join(__dirname, 'views/admin-panel')  // Widoki w /views/admin-panel
+]);
 app.use(methodOverride('_method')); //Umożliwia korzystanie z PUT/PATCH w formularzach
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
@@ -49,7 +54,7 @@ app.use('/decrypt-password',eventsRouter);
 app.use('/panel', panelRouter);
 app.use('/events', eventsRouter);
 app.use('/logout', logoutRouter);
-
+app.use('/admin', adminRoutes);
 
 //debugowanie
 app.use((req, res, next) => {

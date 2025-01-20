@@ -1,0 +1,46 @@
+doctype html
+html
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title Przedmioty dla wydarzenia
+    link(rel="stylesheet", href="/stylesheets/admin/items/style.css")
+  body
+    .container
+      h1 Przedmioty dla wydarzenia #{eventId}
+
+      if items.length === 0
+        p Brak przedmiotów dla tego wydarzenia.
+      else
+        table
+          thead
+            tr
+              th Nazwa
+              th Wartości
+              th Obraz
+              th Akcje
+          tbody
+            each item in items
+              tr
+                td= item.name
+                td
+                  ul
+                    if Object.keys(item.item_values).length > 0
+                      each value, key in item.item_values
+                        li #{item_properties[key]}: #{value || defaultValues[key]}
+                    else
+                      li Brak wartości
+                td
+                  if item.image
+                    img(src=`data:image/jpeg;base64,${item.image}` alt="Obraz przedmiotu" width="100")
+                  else
+                    p Brak obrazu
+                td
+                  .actions
+                    // Przycisk usuwania przedmiotu
+                    form(method="post", action=`/admin/allevents/${eventId}/items/${item.id}?_method=DELETE`)
+                      button(type="submit" class="btn btn-danger") Usuń
+                    // Przycisk przejścia do ocen i komentarzy
+                    a.btn.btn-primary(href=`/admin/allevents/${eventId}/items/${item.id}/ratings`) Oceny i Komentarze
+
+      a.back-button(href='/admin/allevents') Powrót do listy wydarzeń

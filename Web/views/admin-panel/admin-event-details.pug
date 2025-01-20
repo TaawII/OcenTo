@@ -1,0 +1,54 @@
+doctype html
+html
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title Szczegóły wydarzenia
+    link(rel="stylesheet", href="/stylesheets/admin/event-details/style.css")
+  body
+    .container
+      h1 Szczegóły wydarzenia
+
+      if event.image
+        .event-image
+          img(src=`data:image/jpeg;base64,${event.image}`, alt="Zdjęcie wydarzenia")
+      else
+        .no-image
+          p Brak zdjęcia dostępnego
+
+      .details-section
+        h2 Informacje o wydarzeniu
+        table.details-table
+          tr
+            th Tytuł
+            td= event.title
+          tr
+            th Rozpoczęcie
+            td= event.start_time
+          tr
+            th Zakończenie
+            td= event.end_time
+          tr
+            th Status
+            td= event.status
+          tr
+            th Prywatne
+            td= event.is_private ? 'Tak' : 'Nie'
+          tr
+            th Kategorie
+            td= event.categories.join(', ')
+
+      .properties-section
+        h2 Właściwości przedmiotów i domyślne wartości
+        table.properties-table
+          tr
+            th Właściwość
+            th Domyślna wartość
+          each property, index in event.item_properties
+            tr
+              td= property
+              td= event.default_values[index]
+
+      .links
+        a.back-button(href="/admin/allevents") Powrót do listy wydarzeń
+        a.back-button(href=`/admin/allevents/${event.id}/items`) Pokaż przedmioty
