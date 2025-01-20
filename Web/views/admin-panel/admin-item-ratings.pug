@@ -26,10 +26,11 @@ html
                 td= rating.rating_value ? `${rating.rating_value}/5` : "Brak oceny"
                 td= rating.comment || "Brak komentarza"
                 td
-                  form(method="post", action=`/admin/allevents/${eventId}/items/${itemId}/ratings/${rating.id}?_method=DELETE`)
-                    button.btn-delete-rating(type="submit") Usuń
+                  .action-buttons
+                    form(method="post", action=`/admin/allevents/${eventId}/items/${itemId}/ratings/${rating.id}?_method=DELETE`)
+                      button.btn-delete-rating(type="submit") Usuń komentarz i ocenę
 
-                  form(method="post", action=`/admin/allevents/${eventId}/items/${itemId}/ratings/${rating.id}/delete-comment?_method=DELETE`)
-                    button.btn-delete-comment(type="submit") Usuń komentarz
+                    form(method="post", action=`/admin/allevents/${eventId}/items/${itemId}/ratings/${rating.id}/delete-comment?_method=DELETE`)
+                      button.btn-delete-comment(type="submit") Usuń komentarz
 
       a.back-button(href=`/admin/allevents/${eventId}/items`) Powrót do listy przedmiotów

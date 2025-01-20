@@ -10,7 +10,6 @@ router.get('/allevents/:id/items', adminController.getEventItems);
 router.delete('/allevents/:eventId/items/:itemId', adminController.deleteItem);
 router.get('/allevents/:eventId/items/:itemId/ratings', adminController.getItemRatings);
 router.delete('/allevents/:eventId/items/:itemId/ratings/:ratingId',adminController.deleteRatingAndComment);
-// Usuwanie tylko komentarza
 router.delete('/allevents/:eventId/items/:itemId/ratings/:ratingId/delete-comment', adminController.deleteComment);
 
 module.exports = router;

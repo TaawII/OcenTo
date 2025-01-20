@@ -1,16 +1,49 @@
 const axios = require('axios');
-
 exports.getAllEvents = async (req, res) => {
   try {
+    // Pobranie wydarzeń z API
     const response = await axios.get(`http://127.0.0.1:8000/api/events/admin/allevents`, {
       headers: {
-        Authorization: `Bearer ${req.user.token}`, 
+        Authorization: `Bearer ${req.user.token}`,
       },
-    }); console.log(req.user.token);
-    res.render('allevents', { events: response.data }); 
+    });
+
+    // Ustawienia formatowania daty w języku polskim
+    const dateFormatter = new Intl.DateTimeFormat("pl-PL", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false, // Format 24-godzinny
+    });
+
+    // Funkcja do formatowania daty
+    const formatDate = (dateString) => {
+      const date = new Date(dateString);
+      if (isNaN(date)) {
+        return "Niepoprawna data"; // Obsługa błędnego formatu daty
+      }
+      return dateFormatter.format(date);
+    };
+
+    // Formatowanie wydarzeń
+    const formattedEvents = response.data.map((event) => ({
+      ...event,
+      start_time: formatDate(event.start_time),
+      end_time: formatDate(event.end_time),
+    }));
+
+    // Debugowanie
+    console.log("Formatted Events:", formattedEvents);
+
+    // Renderowanie widoku z przetworzonymi danymi
+    res.render("allevents", { events: formattedEvents });
   } catch (error) {
-    console.error('Błąd podczas pobierania wydarzeń:', error.message);
-    res.status(500).send('Wewnętrzny błąd serwera');
+    console.error("Błąd podczas pobierania wydarzeń:", error.message);
+
+    // Obsługa błędów
+    res.status(500).send("Wewnętrzny błąd serwera");
   }
 };
 
@@ -103,7 +136,6 @@ exports.getItemRatings = async (req, res) => {
           itemId,
           
       });
-      console.log(response.data);
   } catch (error) {
       console.error('Error fetching item ratings:', error.message);
 

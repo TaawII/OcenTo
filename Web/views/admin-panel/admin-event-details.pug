@@ -1,53 +1,54 @@
-extends ../layout
+doctype html
+html
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title Szczegóły wydarzenia
+    link(rel="stylesheet", href="/stylesheets/admin/event-details/style.css")
+  body
+    .container
+      h1 Szczegóły wydarzenia
 
-block content
-  .page-header
-    h1 Szczególy wydarzenia
+      if event.image
+        .event-image
+          img(src=`data:image/jpeg;base64,${event.image}`, alt="Zdjęcie wydarzenia")
+      else
+        .no-image
+          p Brak zdjęcia dostępnego
 
-  doctype html
-  html
-    head
-      link(rel="stylesheet", href="/stylesheets/panel/event-detail/style.css")
-    body
-      .event-details
-        if event.image
-          img(src=`data:image/jpeg;base64,${event.image}`, alt="Event Image", width="300")
-        else
-          p No image available
+      .details-section
+        h2 Informacje o wydarzeniu
+        table.details-table
+          tr
+            th Tytuł
+            td= event.title
+          tr
+            th Rozpoczęcie
+            td= event.start_time
+          tr
+            th Zakończenie
+            td= event.end_time
+          tr
+            th Status
+            td= event.status
+          tr
+            th Prywatne
+            td= event.is_private ? 'Tak' : 'Nie'
+          tr
+            th Kategorie
+            td= event.categories.join(', ')
 
-        ul.details-list
-          li
-            strong Title:
-            | #{event.title}
-          li
-            strong Start Time:
-            | #{event.start_time}
-          li
-            strong End Time:
-            | #{event.end_time}
-          li
-            strong Status:
-            | #{event.status}
-          li
-            strong Private:
-            | #{event.is_private ? 'Yes' : 'No'}
-          li
-            strong Categories:
-            | #{event.categories.join(', ')}
+      .properties-section
+        h2 Właściwości przedmiotów i domyślne wartości
+        table.properties-table
+          tr
+            th Właściwość
+            th Domyślna wartość
+          each property, index in event.item_properties
+            tr
+              td= property
+              td= event.default_values[index]
 
-        h2 Item Properties and Default Values
-        .properties-list
-          ul
-            each property, index in event.item_properties
-              li
-                strong Property:
-                | #{property}
-                br
-                strong Default Value:
-                | #{event.default_values[index]}
-
-        .links
-          a.btn-back(href="/admin/allevents") Back to Events
-          a.btn-items(href="/admin/allevents/${event.id}/items") View Items
-          a.btn-details(href=`/admin/allevents/${event.id}/items`) Pokaz przedmioty
-
+      .links
+        a.back-button(href="/admin/allevents") Powrót do listy wydarzeń
+        a.back-button(href=`/admin/allevents/${event.id}/items`) Pokaż przedmioty
