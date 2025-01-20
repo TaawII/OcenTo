@@ -45,7 +45,7 @@ block content
           label(for="image") Zdjęcie:
           input(type="file", name="image", accept="image/*")
           if event.image
-            img(src=`data:image/jpeg;base64,${event.image}`, alt="Current Image", width="100")
+            img(src=`data:image/jpeg;base64,${event.image.toString('base64')}`, alt="Current Image", width="100")
           else
             p Brak zdjęcia
 
@@ -65,7 +65,7 @@ block content
     $(document).ready(function() {
       function formatDate(date) {
         let d = new Date(date);
-        return d.toISOString().slice(0, 16);  // Zwróci datę w formacie "YYYY-MM-DDTHH:MM"
+        return d.toISOString().slice(0, 16);
       }
 
       $('input[type="datetime-local"]').each(function() {

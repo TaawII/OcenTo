@@ -31,6 +31,12 @@ body {
     border: 1px solid #ddd;
     border-radius: 4px;
   }
+
+  label input[type="checkbox"] {
+    margin-right: 8px; /* Odstęp między checkboxem a tekstem */
+    vertical-align: middle; /* Wyrównanie do tekstu */
+  }
+  
   
   input:focus, textarea:focus {
     outline: none;
@@ -73,7 +79,7 @@ body {
   }
   
   .form-header h2 {
-    font-size: 26px;
+    font-size: 30px;
     color: #333;
     font-weight: bold;
     text-transform: uppercase;

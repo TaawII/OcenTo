@@ -1,107 +1,62 @@
 extends ../layout
 
 block content
-  .page-header
-    h1 Szczególy wydarzenia
-
   doctype html
   html
     head
-      link(rel="stylesheet", href="/stylesheets/panel/event-detail/style.css")
+      link(rel="stylesheet", href="/stylesheets/panel/event-detail.css")
     body
-      .event-details
-        // Wyświetlanie zdjęcia pod tytułem eventu
-        if event.image
-          img(src=`data:image/jpeg;base64,${event.image}`, alt="Event Image", width="300")
-        else
-          p No image available
+      .form-header
+        h2 Szczegóły wydarzenia
+      .event-container
+        .event-header
+          if event.image
+            img.event-image(src=`data:image/jpeg;base64,${event.image}`, alt="Event Image")
+          else
+            div.no-image No image available
+          ul.details-list
+            li
+              strong Tytuł:
+              | #{event.title}
+            li
+              strong Data startu:
+              | #{event.start_time}
+            li
+              strong Data zakończenia:
+              | #{event.end_time}
+            li
+              strong Status:
+              if event.status === 'Active'
+                | Aktywny
+              else if event.status === 'End'
+                | Zakończony
+              else if event.status === 'Waiting'
+                | Oczekujący
+              else
+                | #{event.status}
+            li
+              strong Prywatny:
+              | #{event.is_private ? 'Tak' : 'Nie'}
+            li
+              strong Kategorie:
+              | #{event.categories.join(', ')}
 
-        ul.details-list
-          li
-            strong Title:
-            | #{event.title}
-          li
-            strong Start Time:
-            | #{event.start_time}
-          li
-            strong End Time:
-            | #{event.end_time}
-          li
-            strong Status:
-            | #{event.status}
-          li
-            strong Private:
-            | #{event.is_private ? 'Yes' : 'No'}
-          li
-            strong Categories:
-            | #{event.categories.join(', ')}
-
-        h2 Item Properties and Default Values
-        .properties-list
-          ul
-            each property, index in event.item_properties
-              li
-                strong Property:
-                | #{property}
-                br
-                strong Default Value:
-                | #{event.default_values[index]}
+        .event-body
+          br
+          h2 Właściwości i wartości domyślne przedmiotów:
+          .properties-list
+            ul
+              each property, index in event.item_properties
+                li.property-item
+                  .property-block
+                    strong Właściwość:
+                    | #{property}
+                  .value-block
+                    strong Wartość domyślna: 
+                    | #{event.default_values[index]}
+        .qr-code
+          img(src=qrCode alt="QR Code")
 
         .links
-          a.btn-edit(href=`/panel/events/${event.id}/edit`) Edit Event
-          a.btn-back(href="/panel/events") Back to Events
-
-
-        img(src=qrCode alt="QR Code")
-
-
-
-
-//- doctype html
-//- html
-//-   head
-//-     title Event Details
-//-     link(rel="stylesheet", href="/stylesheets/panel/event-detail/style.css")
-//-   body
-//-     h1 Event Details
-//-     .event-details
-//-       // Wyświetlanie zdjęcia pod tytułem eventu
-//-       if event.image
-//-         img(src=`data:image/jpeg;base64,${event.image}`, alt="Event Image", width="300")
-//-       else
-//-         p No image available
-
-//-       ul.details-list
-//-         li
-//-           strong Title:
-//-           | #{event.title}
-//-         li
-//-           strong Start Time:
-//-           | #{event.start_time}
-//-         li
-//-           strong End Time:
-//-           | #{event.end_time}
-//-         li
-//-           strong Status:
-//-           | #{event.status}
-//-         li
-//-           strong Private:
-//-           | #{event.is_private ? 'Yes' : 'No'}
-//-         li
-//-           strong Categories:
-//-           | #{event.categories.join(', ')}
-
-//-       h2 Item Properties and Default Values
-//-       .properties-list
-//-         ul
-//-           each property, index in event.item_properties
-//-             li
-//-               strong Property:
-//-               | #{property}
-//-               br
-//-               strong Default Value:
-//-               | #{event.default_values[index]}
-
-//-       .links
-//-         a.btn-edit(href=`/panel/events/${event.id}/edit`) Edit Event
-//-         a.btn-back(href="/panel/events") Back to Events
+          a.btn-edit(href=`/panel/events/${event.id}/edit`) Edytuj wydarzenie
+          a.btn-back(href="/panel/events") Powrót do wydarzeń

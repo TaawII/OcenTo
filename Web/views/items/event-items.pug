@@ -30,7 +30,7 @@ block content
                   each value, index in item.item_values
                     li
                       strong #{event.item_properties[index]}: 
-                      | #{value || 'Brak wartości'}
+                      | #{value || event.default_values[index] || 'Brak wartości'}
 
               .item-actions
                 a.btn-reviews(href=`/panel/events/${event.id}/items/${item.id}/reviews`) Oceny
