@@ -4,6 +4,5 @@ const eventController = require('../controllers/events-controller');
 
 router.get('/create', eventController.renderCreateEvent);
 router.post('/create', eventController.submitEvent);
-router.post('/decrypt-password', eventController.getDecryptedPassword);
 
 module.exports = router;

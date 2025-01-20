@@ -84,27 +84,22 @@ class OwnerEventsListView(APIView):
 
 class CreateEventView(APIView):
     permission_classes = [IsAuthenticated]
-
+    CATEGORIES = ["Piwo", "Impreza", "Zwierzęta", "Inna", "Petardy"]
     def post(self, request, *args, **kwargs):
         data = request.data
         id = request.user.id
         try:
-            # Pobieranie użytkownika na podstawie przekazanego ID
             owner = User.objects.get(id=id)
             image_binary = ''
-            # Sprawdzanie, czy obraz jest przesyłany w formacie Base64
             image_data = data.get('image', None)
             if image_data:
                 try:
                     if image_data.startswith("data:image/jpeg;base64,"):
-                        # Usunięcie prefiksu
                         image_data = image_data.split(",")[1]
 
-                        # Przekształcanie danych base64 na binarny format
-                    image_binary = base64.b64decode(image_data)  # Dekodowanie
+                    image_binary = base64.b64decode(image_data)
                 except Exception as e:
                     return Response({'error': f'Błąd przy dekodowaniu obrazu: {str(e)}'}, status=400)
-            # Tworzenie nowego wydarzenia
             passwordGet = data.get('password')
             if(passwordGet):
                 password = encrypt_password(passwordGet)
@@ -115,7 +110,6 @@ class CreateEventView(APIView):
                 item_properties=data.get('item_properties'),
                 default_values=data.get('default_values'),
                 owner=owner,
-                status=data.get('status'),
                 start_time=data.get('start_time'),
                 end_time=data.get('end_time'),
                 is_private=data.get('is_private', False),
@@ -128,6 +122,10 @@ class CreateEventView(APIView):
 
         except Exception as e:
             return Response({'error': str(e)}, status=400)
+
+    def get(self, request, *args, **kwargs):
+
+        return Response({'categories': self.CATEGORIES})
 
 
 class EventDetailView(APIView):

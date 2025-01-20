@@ -1,8 +1,6 @@
-const FormData = require('form-data'); // Wymaga zainstalowania form-data
+const FormData = require('form-data'); 
 const fs = require('fs');
 const axios = require('axios');
-const { encryptPassword } = require('../utils/encryption');
-const { decryptPassword } = require('../utils/encryption');
 const QRCode = require('qrcode');
 
 exports.getEvent = async (req, res) => {
@@ -156,20 +154,31 @@ exports.renderEditForm = async (req, res) => {
   }
 };
 
-exports.renderCreateEvent = (req, res) => {
-  res.render('events/create', { error: null });
+exports.renderCreateEvent = async (req, res) => {
+  try {
+    const serverURL = process.env.serwerURL;
+    const response = await axios.get(`http://${serverURL}/create`, {
+      headers: {
+        'Authorization': `Bearer ${req.cookies.auth_token}`, 
+      },
+    });
+
+    const categories = response.data.categories || [];
+    res.render('events/create', { error: null, categories });
+  } catch (error) {
+    console.error('Błąd podczas pobierania kategorii:', error.message);
+    res.render('events/create', { error: 'Nie udało się załadować kategorii', categories: [] });
+  }
 };
+
 exports.submitEvent = async (req, res) => {
   const serverURL = process.env.serwerURL;
   try {
     let imageBase64 = req.file? req.file.buffer.toString('base64'):null;
-    const isPrivate = req.body.is_private === 'on' ? true : false; // Sprawdzamy, czy checkbox jest zaznaczony
+    const isPrivate = req.body.is_private === 'on' ? true : false; 
 
-  //Sprawdzenie, czy dane item_properties i default_values są w formie tablicy
   let { item_properties, default_values, categories } = req.body;
 
-
-  //Jeśli są pojedynczymi wartościami, przekonwertuj je na tablice
   if (typeof item_properties === 'string') {
     item_properties = [item_properties];
   }
@@ -180,17 +189,14 @@ exports.submitEvent = async (req, res) => {
     categories = [categories];
   }
   let password = req.body.password || null;
-    // if (password) {
-    //   password = encryptPassword(password); // Szyfruj hasło przed wysłaniem
-    // }
+
     const formData = {
       title: req.body.title,
       item_properties: item_properties || [], 
       default_values: default_values || [],   
-      status: req.body.status,
       start_time: req.body.start_time,
       end_time: req.body.end_time,
-      is_private: isPrivate, //poprawka
+      is_private: isPrivate, 
       password: password || null,
       categories: categories || [],
       image: imageBase64
@@ -198,7 +204,6 @@ exports.submitEvent = async (req, res) => {
 
     const token = req.cookies.auth_token;
     console.log(token);
-    // Przesyłanie danych do Django
     const response = await axios.post(`http://${serverURL}/create`, formData, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -210,31 +215,6 @@ exports.submitEvent = async (req, res) => {
     console.error(error);
     res.status(500).send('Błąd podczas przesyłania Eventu');
   } 
-}
-exports.getDecryptedPassword = (req, res) => {
-  try {
-    const { encryptedPassword } = req.body;
-
-    // Sprawdzenie, czy zaszyfrowane hasło zostało przesłane
-    if (!encryptedPassword) {
-      return res.status(400).json({ error: 'Brak zaszyfrowanego hasła do odszyfrowania' });
-    }
-
-    console.log('Zaszyfrowane hasło otrzymane z Postmana:', encryptedPassword);
-
-    // Próba odszyfrowania hasła
-    const decryptedPassword = decryptPassword(encryptedPassword);
-
-    console.log('Odszyfrowane hasło:', decryptedPassword);
-
-    // Zwrócenie odszyfrowanego hasła w odpowiedzi
-    res.status(200).json({ decryptedPassword });
-  } catch (error) {
-    console.error('Błąd podczas odszyfrowywania hasła:', error.message);
-
-    // Jeśli wystąpił błąd, zwróć odpowiednią odpowiedź
-    res.status(500).json({ error: 'Błąd podczas odszyfrowywania hasła. Upewnij się, że zaszyfrowane hasło jest poprawne.' });
-  }
 }
 
 exports.getUserEvents = async (req, res) => {
