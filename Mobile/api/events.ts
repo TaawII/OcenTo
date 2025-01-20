@@ -115,6 +115,17 @@ export const addOrModifyItemRating = async (item_id: Number, rating_value: Numbe
   }
 };
 
+// Funkcja do usuwania oceny przedmiotu
+export const deleteComment = async (item_id: Number): Promise<any[]> => {
+  try {
+    const response = await axios.delete(`${API_URL}/mobileRatingDelete/${item_id}`);
+    return response.data.data;
+  } catch (error) {
+    console.error('Błąd podczas usuwania komentarza: ', error);
+    return [];
+  }
+};
+
 // Testowanie czasu zapytan
 // const startTime = new Date().getTime();  // Zapisz czas wysłania zapytania
 // const endTime = new Date().getTime();  // Zapisz czas zakończenia zapytania

@@ -3,7 +3,7 @@ import { View, Text, TextInput, Image, StyleSheet, ScrollView, TouchableOpacity,
 import { Rating } from 'react-native-ratings';
 import { useRoute, RouteProp, useFocusEffect, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from "../App";
-import { getItemDetails, addOrModifyItemRating } from '../api/events';
+import { getItemDetails, addOrModifyItemRating, deleteComment } from '../api/events';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 type ItemDetailsScreenRouteProp = RouteProp<RootStackParamList, 'ItemDetails'>;
@@ -25,6 +25,9 @@ const ItemDetailScreen = () => {
             if (result[4] && result[4] !== null) {
                 setUserRating(result[4].rating_value || 0);
                 setUserComment(result[4].comment || 0);
+            } else {
+                setUserRating(0);
+                setUserComment("");
             }
         } catch (error) {
             console.error("Błąd ładowania danych:", error)
@@ -52,6 +55,10 @@ const ItemDetailScreen = () => {
     const handleEdit = () => {
         setEditable(!editable);
     };
+    const handleDelete = async () => {
+        await deleteComment(itemId);
+        await load();
+    };
     const handleSave = async () => {
         if (userRating === 0) {
             Alert.alert('Błąd', 'Ocena nie może wynosić 0');
@@ -59,7 +66,7 @@ const ItemDetailScreen = () => {
         }
         setEditable(false);
         await addOrModifyItemRating(itemId, userRating, userComment);
-        load();
+        await load();
     };
 
     return (
@@ -98,7 +105,6 @@ const ItemDetailScreen = () => {
                     </View>
                 ))}
 
-                {/* Editable Rating and Comment Section */}
                 <View style={styles.editableSection}>
                     <View style={styles.ratingRow}>
                         <Text style={styles.ratingText}>Twoja ocena:</Text>
@@ -124,44 +130,68 @@ const ItemDetailScreen = () => {
                         editable={editable}
                         multiline={true}
                     />
-                    {editable ? (
-                        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                            <Text style={styles.buttonText}>Zapisz</Text>
-                        </TouchableOpacity>
-                    ) : (
-                        <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
-                            <Text style={styles.buttonText}>Edytuj komentarz</Text>
-                        </TouchableOpacity>
+                    {["Active"].includes(itemData[5]) && (
+                        <>
+                            {editable ? (
+                                <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+                                    <Text style={styles.buttonText}>Zapisz</Text>
+                                </TouchableOpacity>
+                            ) : (
+                                <>
+                                    <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
+                                        <Text style={styles.buttonTextFirst}>Edytuj komentarz</Text>
+                                    </TouchableOpacity>
+                                    {userRating !== 0 && (
+                                        <TouchableOpacity style={styles.editButton} onPress={handleDelete}>
+                                            <Text style={styles.buttonTextSecond}>Usuń komentarz</Text>
+                                        </TouchableOpacity>
+                                    )}
+                                </>
+                            )}
+                        </>
                     )}
                 </View>
 
-                {/* Comments Section */}
                 {itemData[1].map((comment: any, index: any) => (
                     <View key={index} style={styles.commentContainer}>
-
-                        {/* Display rating if it exists */}
-                        {comment.rating_value !== undefined && comment.rating_value !== null && (
-                            <View style={styles.ratingRow}>
-                                <Text style={styles.username}>{comment.user}</Text>
-                                <Rating
-                                    tintColor="#f9f9f9"
-                                    startingValue={comment.rating_value}
-                                    readonly
-                                    imageSize={24}
-                                />
-                                <Text style={styles.ratingTextRight}>{comment.rating_value.toFixed(1)}</Text>
-                            </View>
-                        )}
-
-                        {/* Display comment if it exists */}
-                        {comment.comment !== undefined && comment.comment !== null && (
-                            <TextInput
-                                style={styles.commentInput}
-                                value={comment.comment}
-                                editable={false}
-                                multiline={true}
-                            />
-                        )}
+                        {comment.rating_value !== undefined && comment.rating_value !== null ? (
+                            <>
+                                <View style={styles.ratingRow}>
+                                    <Text style={styles.username}>{comment.user}</Text>
+                                    <Rating
+                                        tintColor="#f9f9f9"
+                                        startingValue={comment.rating_value}
+                                        readonly
+                                        imageSize={24}
+                                        style={styles.rating}
+                                    />
+                                    <Text style={styles.ratingTextRight}>{comment.rating_value.toFixed(1)}</Text>
+                                </View>
+                                {comment.comment !== undefined && comment.comment !== null && (
+                                    <TextInput
+                                        style={styles.commentInput}
+                                        value={comment.comment}
+                                        editable={false}
+                                        multiline={true}
+                                    />
+                                )}
+                            </>
+                        ) : (
+                            <>
+                                {comment.comment !== undefined && comment.comment !== null && (
+                                    <>
+                                        <Text style={styles.username}>{comment.user}</Text>
+                                        <TextInput
+                                            style={styles.commentInput}
+                                            value={comment.comment}
+                                            editable={false}
+                                            multiline={true}
+                                        />
+                                    </>
+                                )}
+                            </>
+                        )
+                        }
                     </View>
                 ))}
             </ScrollView>
@@ -213,6 +243,17 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         textAlign: 'center',
+    },
+    buttonTextFirst: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        textAlign: 'center',
+    },
+    buttonTextSecond: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        color: "red",
     },
     rating: {
         alignSelf: 'flex-start',
@@ -284,10 +325,17 @@ const styles = StyleSheet.create({
     },
     editButton: {
         backgroundColor: '#f1f1f1',
+        // backgroundColor: '#f9f9f9',
         padding: 10,
         marginTop: 10,
-        borderRadius: 5,
+        borderRadius: 10,
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#ddd',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
     },
     saveButton: {
         backgroundColor: '#4CAF50',
@@ -297,7 +345,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     username: {
-        marginLeft: 5,
         fontWeight: 'bold',
         marginRight: 10,
         fontSize: 16,
