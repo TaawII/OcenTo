@@ -252,8 +252,9 @@ class MobileItemDetailsView(APIView):
         event = item.event
         item_properties = event.item_properties if hasattr(event, 'item_properties') else None
         default_values = event.default_values if hasattr(event, 'default_values') else None
+        event_status = event.status if hasattr(event, 'status') else None
 
-        rating = [item_data, ratings_data, item_properties, default_values, user_rating_data]
+        rating = [item_data, ratings_data, item_properties, default_values, user_rating_data, event_status]
         
         return Response({'success': True, 'data': rating}, status=status.HTTP_200_OK)
 
@@ -287,8 +288,17 @@ class UserEventsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        user = request.user  # Pobierz zalogowanego użytkownika
-        events = Event.objects.filter(owner=user)  # Wyszukaj wszystkie wydarzenia użytkownika
+        user = request.user
+        events = Event.objects.filter(owner=user)
         serializer = EventSerializer(events, many=True)
         return Response(serializer.data)
 
+class MobileDeleteRatingView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, item_id):
+        user = request.user
+        item = Item.objects.filter(id = item_id).first()
+        rating = ItemRating.objects.filter(user=user, item=item).first()
+        rating.delete()
+        return Response({'success': 'Ocena została usunięta.'}, status=status.HTTP_200_OK)
