@@ -15,6 +15,9 @@ router.get('/events/:id/edit', eventsController.renderEditForm);
 // Trasa do edytowania wydarzenia
 router.post('/events/:id/edit', eventsController.editEvent);
 
+// Usuwanie wydarzenia
+router.delete('/events/:eventId/delete', eventsController.deleteEvent);
+
 // Trasa GET dla itemów wydarzenia
 router.get('/events/:event_id/items', itemsController.getEventItems);
 

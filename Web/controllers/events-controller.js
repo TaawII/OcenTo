@@ -277,3 +277,20 @@ exports.getUserEvents = async (req, res) => {
   }
 };
 
+exports.deleteEvent = async (req, res) => {
+  const { eventId } = req.params;
+  const authToken = req.cookies.auth_token;
+  const serverURL = process.env.serwerURL;
+
+  try {
+    const response = await axios.delete(`http://${serverURL}/${eventId}/delete`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+
+    res.status(200).send({ message: "Wydarzenie zostało pomyślnie usunięte." });
+  } catch (error) {
+    console.error("Błąd podczas usuwania wydarzenia:", error.response?.data || error.message);
+    res.status(500).send({ error: "Nie udało się usunąć wydarzenia." });
+  }
+};
+

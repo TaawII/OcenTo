@@ -12,7 +12,7 @@ from django.db.models import Count
 from django.shortcuts import get_object_or_404
 import logging, base64
 from .models import User, Event, Item, ItemRating
-from .serializers import MobileEventSerializer, OwnerEventSerializer, EventSerializer, ItemSerializer, EventMember, MobileEventItemSerializer, ItemRatingSerializer, ItemDetailSerializer, ItemRatingDetailSerializer, EventEditSerializer, AdminItemRatingSerializer
+from .serializers import MobileEventSerializer, OwnerEventSerializer, EventSerializer, ItemSerializer, EventMember, MobileEventItemSerializer, ItemRatingSerializer, ItemDetailSerializer, ItemRatingDetailSerializer, EventEditSerializer, AdminItemRatingSerializer, EventNoImageSerializer
 from rest_framework.authentication import get_authorization_header
 from io import BytesIO
 from .encryption import decrypt_password, encrypt_password
@@ -105,7 +105,11 @@ class CreateEventView(APIView):
                 except Exception as e:
                     return Response({'error': f'Błąd przy dekodowaniu obrazu: {str(e)}'}, status=400)
             # Tworzenie nowego wydarzenia
-            password = encrypt_password(data.get('password'))
+            passwordGet = data.get('password')
+            if(passwordGet):
+                password = encrypt_password(passwordGet)
+            else:
+                password = ''
             event = Event.objects.create(
                 title=data.get('title'),
                 item_properties=data.get('item_properties'),
@@ -293,8 +297,9 @@ class UserEventsView(APIView):
     def get(self, request):
         user = request.user
         events = Event.objects.filter(owner=user)
-        serializer = EventSerializer(events, many=True)
+        serializer = EventNoImageSerializer(events, many=True)
         return Response(serializer.data)
+
 
 class MobileDeleteRatingView(APIView):
     permission_classes = [IsAuthenticated]
@@ -691,3 +696,18 @@ class OwnerDeleteRatingView(APIView):
         # Usuń ocenę
         rating.delete()
         return Response({'success': 'Ocena została usunięta.'}, status=status.HTTP_200_OK)
+
+class OwnerDeleteEventView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, event_id):
+        # Pobierz wydarzenie
+        event = get_object_or_404(Event, id=event_id)
+
+        # Sprawdź, czy użytkownik jest właścicielem wydarzenia
+        if event.owner != request.user:
+            return Response({"error": "Nie masz uprawnień do usunięcia tego wydarzenia."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Usuń wydarzenie (kaskadowo usunie wszystkie powiązane elementy: itemy, oceny itp.)
+        event.delete()
+        return Response({"message": "Wydarzenie zostało pomyślnie usunięte."}, status=status.HTTP_200_OK)

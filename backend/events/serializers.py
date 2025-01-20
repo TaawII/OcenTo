@@ -203,3 +203,8 @@ class ItemSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Item values must be a list.')
 
         return value
+
+class EventNoImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        exclude = ['image']  # Wyklucz pole `image`
