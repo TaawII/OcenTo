@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
+const serverURL = process.env.serwerURL || '127.0.0.1:8000/api/events'; 
 
 exports.isAdmin = async (req, res, next) => {
   try {
@@ -10,7 +11,7 @@ exports.isAdmin = async (req, res, next) => {
       return res.status(401).send('Brak tokenu'); 
     }
 
-    const response = await axios.get('http://127.0.0.1:8000/api/events/admin/allevents', {
+    const response = await axios.get(`http://${serverURL}/admin/allevents`, {
       headers: {
         Authorization: `Bearer ${token}`, 
       },
