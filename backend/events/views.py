@@ -223,7 +223,27 @@ class JoinEventView(APIView):
         
         EventMember.objects.create(user_id=user_id, event_id=event_id)
         return Response({'success': True}, status=status.HTTP_200_OK)
+
+class JoinEventQRView(APIView):
+    def post(self, request):
+        user_id = request.user.id
+        event_id = request.data.get('eventId')
+        password = request.data.get('password','')
+
+        event = Event.objects.get(id = event_id)
+
+        if event.is_private:
+            if not password == event.password:
+                return Response({'success': False, 'message': 'Błędne hasło.'}, status=status.HTTP_200_OK)
+
+        is_member = EventMember.objects.filter(user_id=user_id, event_id=event_id).exists()
+        if is_member:
+            return Response({'success': False, 'message': 'Użytkownik nalezy już do tego eventu.'}, status=status.HTTP_200_OK)
+        
+        EventMember.objects.create(user_id=user_id, event_id=event_id)
+        return Response({'success': True}, status=status.HTTP_200_OK)
     
+
 class VerifyTokenView(APIView):
     permission_classes = [AllowAny]
 
