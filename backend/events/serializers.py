@@ -207,4 +207,4 @@ class ItemSerializer(serializers.ModelSerializer):
 class EventNoImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
-        exclude = ['image']  # Wyklucz pole `image`
+        exclude = ['image']

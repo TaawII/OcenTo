@@ -205,7 +205,7 @@ exports.submitEvent = async (req, res) => {
       }
     });
  
-    res.send('Event został przesłany pomyślnie!');
+    res.redirect(`/panel/events/${response.data.id}`);
   } catch (error) {
     console.error(error);
     res.status(500).send('Błąd podczas przesyłania Eventu');

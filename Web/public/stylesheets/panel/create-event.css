@@ -24,7 +24,7 @@ body {
     color: #333;
   }
   
-  input, textarea, button {
+  input, select, button {
     margin-top: 5px;
     padding: 10px;
     font-size: 18px;
@@ -32,7 +32,7 @@ body {
     border-radius: 4px;
   }
   
-  input:focus, textarea:focus {
+  input:focus, select:focus {
     outline: none;
     border-color: #4CAF50;
     box-shadow: 0 0 4px rgba(76, 175, 80, 0.3);
@@ -54,11 +54,14 @@ body {
     background-color: #45a049;
   }
   
-  .error {
-    color: red;
-    font-weight: bold;
-    font-size: 18px;
-    margin-bottom: 10px;
+  .checkbox-group div {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+  }
+  
+  .checkbox-group label {
+    margin-left: 8px;
   }
   
   .field-row {
@@ -67,18 +70,9 @@ body {
     margin-bottom: 15px;
   }
   
-  .field-row .current-image {
-    width: 150px;
-    height: 150px;
-    object-fit: cover;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    margin-top: 10px;
-  }
-  
   .form-header {
     text-align: center;
-    margin-bottom: 0px;
+    margin-bottom: 0;
   }
   
   .form-header h2 {
@@ -91,5 +85,25 @@ body {
     display: inline-block;
     padding-bottom: 5px;
     margin: 5;
+  }
+  
+  .fields-container .field-row {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .remove-field {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    align-self: flex-start;
+  }
+  
+  .remove-field:hover {
+    background-color: #e53935;
   }
   

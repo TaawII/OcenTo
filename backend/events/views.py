@@ -296,7 +296,7 @@ class UserEventsView(APIView):
 
     def get(self, request):
         user = request.user
-        events = Event.objects.filter(owner=user)
+        events = Event.objects.filter(owner=user).defer('image')
         serializer = EventNoImageSerializer(events, many=True)
         return Response(serializer.data)
 

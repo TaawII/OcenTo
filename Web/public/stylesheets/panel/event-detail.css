@@ -1,0 +1,170 @@
+/* Ogólne style */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f7f7f7;
+    margin: 0;
+    padding: 0px;
+  }
+  
+  .page-header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  
+  .page-header h1 {
+    font-size: 2.5rem;
+    color: #333;
+  }
+  
+  .event-container {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .event-header {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  
+  .event-image {
+    width: 300px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+  }
+  
+  .no-image {
+    width: 300px;
+    height: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 10px;
+    border: 1px dashed #ddd;
+    color: #888;
+    font-style: italic;
+  }
+  
+  .details-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    
+  }
+  
+  .details-list li {
+    margin-bottom: 10px;
+    font-size: 1rem;
+    font-size: 1.3rem; /* Zwiększ rozmiar czcionki */
+  }
+  
+  strong {
+    color: black;
+  }
+  
+
+  .details-list strong {
+    font-weight: bold;
+    color: black;
+  }
+  
+  .event-body {
+    margin-top: 20px;
+  }
+  
+  .properties-list ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .property-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+  }
+  
+  .property-block,
+  .value-block {
+    flex: 1;
+  }
+  
+  .property-block {
+    color: #333;
+  }
+  
+  .value-block {
+    text-align: right;
+    color: #555;
+  }
+  
+  /* Style dla przycisków */
+  .links {
+    margin-top: 30px;
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+  }
+  
+  .links a {
+    text-decoration: none;
+    padding: 10px 20px;
+    color: #fff;
+    background-color: #007bff;
+    border-radius: 5px;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+  }
+  
+  .links a:hover {
+    background-color: #0056b3;
+  }
+  
+  .links a.btn-back {
+    background-color: #6c757d;
+  }
+  
+  .links a.btn-back:hover {
+    background-color: #5a6268;
+  }
+  
+  /* QR Code */
+  .qr-code {
+    text-align: center;
+    margin-top: 20px;
+  }
+  
+  .qr-code img {
+    width: 250px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+  }
+
+
+  .form-header {
+    text-align: center;
+    margin-bottom: 0;
+  }
+  
+  .form-header h2 {
+    font-size: 30px;
+    color: #333;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 2px solid #4CAF50;
+    display: inline-block;
+    padding-bottom: 5px;
+    margin: 5;
+  }
+  
