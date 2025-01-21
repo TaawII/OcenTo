@@ -33,7 +33,7 @@ app.set('views', [
   path.join(__dirname, 'views/panel'),
   path.join(__dirname, 'views/admin-panel')
 ]);
-app.use(methodOverride('_method'));h
+app.use(methodOverride('_method'));
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 app.use(upload.single('image'));

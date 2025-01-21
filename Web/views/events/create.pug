@@ -29,10 +29,10 @@ block content
         // Kategorie
         .field-row
           label(for="categories") Kategorie:
-          .checkbox-group
+          .checkbox-group#categoriesGroup
             each category in categories
               div
-                input(type="checkbox", name="categories", value=category)
+                input(type="checkbox", name="categories", value=category, id=category)
                 label(for=category)= category
 
         // Pole dla prywatności wydarzenia
@@ -45,7 +45,9 @@ block content
         // Pole dla hasła (domyślnie wyłączone)
         .field-row
           label(for="password") Hasło:
-          input(type="password", name="password", id="showPassword", placeholder="Wpisz hasło" disabled)
+          .password-container
+            input(type="password", name="password", id="showPassword", placeholder="Wpisz hasło" disabled)
+            button(type="button" id="togglePassword" class="toggle-password") &#128065;
 
         // Dynamiczne pola dla właściwości przedmiotów
         .field-row
@@ -129,4 +131,27 @@ block content
               passwordField.value = '';
             }
           });
+          const togglePassword = document.getElementById("togglePassword");
+          const passwordInput = document.getElementById("showPassword");
+
+          togglePassword.addEventListener("click", function () {
+          const type = passwordInput.type === "password" ? "text" : "password";
+          passwordInput.type = type;
+          this.innerHTML = type === "password" ? "&#128064;" : "&#128065;"; 
+           });
+        const form = document.querySelector('form'); 
+        const categoriesGroup = document.getElementById('categoriesGroup'); 
+        const categoryCheckboxes = categoriesGroup.querySelectorAll('input[type="checkbox"]'); 
+
+        form.addEventListener('submit', function (e) {
+        const isAnyChecked = Array.from(categoryCheckboxes).some(checkbox => checkbox.checked);
+
+        if (!isAnyChecked) {
+          e.preventDefault(); 
+          alert('Musisz wybrać przynajmniej jedną kategorię!');
+          categoriesGroup.classList.add('error'); 
+        } else {
+          categoriesGroup.classList.remove('error'); 
+        }
+       });
         });

@@ -106,4 +106,24 @@ body {
   .remove-field:hover {
     background-color: #e53935;
   }
+  .password-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  
+  .password-container .toggle-password {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+  }
+  .checkbox-group.error {
+    border: 1px solid red;
+    padding: 10px;
+    border-radius: 5px;
+  }
+  
   
