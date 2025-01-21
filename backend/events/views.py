@@ -19,6 +19,9 @@ from .encryption import decrypt_password, encrypt_password
 from django.core.exceptions import ValidationError
 logger = logging.getLogger(__name__)
 
+#Lista kategorii
+CATEGORIES = ["Piwo", "Impreza", "Motoryzacja", "Zwierzęta", "Inna", "Petardy", "Samochody"]
+
 class RegisterView(APIView):
     permission_classes = [AllowAny]
 
@@ -81,10 +84,9 @@ class OwnerEventsListView(APIView):
         serializer = OwnerEventSerializer(events, many=True)
         return Response(serializer.data)
 
-
 class CreateEventView(APIView):
     permission_classes = [IsAuthenticated]
-    CATEGORIES = ["Piwo", "Impreza", "Zwierzęta", "Inna", "Petardy"]
+
     def post(self, request, *args, **kwargs):
         data = request.data
         id = request.user.id
@@ -101,10 +103,14 @@ class CreateEventView(APIView):
                 except Exception as e:
                     return Response({'error': f'Błąd przy dekodowaniu obrazu: {str(e)}'}, status=400)
             passwordGet = data.get('password')
-            if(passwordGet):
+            if passwordGet:
                 password = encrypt_password(passwordGet)
             else:
                 password = ''
+            categories = data.get('categories', [])
+            if any(category not in CATEGORIES for category in categories):
+                return Response({"error": "Nieprawidłowe kategorie."}, status=status.HTTP_400_BAD_REQUEST)
+
             event = Event.objects.create(
                 title=data.get('title'),
                 item_properties=data.get('item_properties'),
@@ -114,7 +120,7 @@ class CreateEventView(APIView):
                 end_time=data.get('end_time'),
                 is_private=data.get('is_private', False),
                 password=password,
-                categories=data.get('categories'),
+                categories=categories,
                 image=image_binary
             )
 
@@ -124,8 +130,7 @@ class CreateEventView(APIView):
             return Response({'error': str(e)}, status=400)
 
     def get(self, request, *args, **kwargs):
-
-        return Response({'categories': self.CATEGORIES})
+        return Response({'categories': CATEGORIES})
 
 
 class EventDetailView(APIView):
@@ -141,41 +146,73 @@ class EventDetailView(APIView):
 class EventEditView(APIView):
     permission_classes = [IsAuthenticated]
 
+    def get(self, request, pk):
+        event = get_object_or_404(Event, pk=pk)
+        
+        # Sprawdzanie uprawnień
+        if event.owner != request.user and request.user.role != 'admin':
+            return Response({"error": "You are not authorized to view this event."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Dodanie pola `has_items` (czy event posiada przypisane przedmioty)
+        event.has_items = event.items.exists()
+
+        serializer = EventSerializer(event)
+        data = serializer.data
+
+        # Dodanie `has_items` do odpowiedzi
+        data['has_items'] = event.has_items
+
+        # Odszyfrowanie hasła
+        if event.is_private and event.password:
+            data['password'] = decrypt_password(event.password)
+        else:
+            data['password'] = ''
+
+        # Dodanie listy dostępnych kategorii
+        data['available_categories'] = CATEGORIES
+
+        return Response(data)
+
     def put(self, request, pk):
         event = get_object_or_404(Event, pk=pk)
+
+        # Sprawdzanie uprawnień
         if event.owner != request.user:
             return Response({"error": "You are not authorized to edit this event."}, status=status.HTTP_403_FORBIDDEN)
 
         data = request.data
+
+        # Weryfikacja kategorii
+        categories = data.get('categories', [])
+        if any(category not in CATEGORIES for category in categories):
+            return Response({"error": "Nieprawidłowe kategorie."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Obsługa obrazu
         image_data = data.get('image', None)
-
         if image_data:
+            if image_data.startswith("data:image/jpeg;base64,"):
+                image_data = image_data.split(",")[1]
             try:
-                # Sprawdź, czy dane zawierają prefiks "data:image/jpeg;base64,"
-                if image_data.startswith("data:image/jpeg;base64,"):
-                    # Usunięcie prefiksu
-                    image_data = image_data.split(",")[1]
-                    
-                # Przekształcanie danych base64 na binarny format
-                image_binary = base64.b64decode(image_data)  # Dekodowanie
-
-                event.image = image_binary  # Zapisz obraz jako BLOB w bazie danych
+                image_binary = base64.b64decode(image_data)
+                event.image = image_binary
             except Exception as e:
-                print(f"Error decoding image: {e}")
-                return Response({"error": "Invalid image data"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error": "Invalid image data."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Szyfrowanie hasła
+        password = data.get('password')
+        if password:
+            data['password'] = encrypt_password(password)
+        else:
+            data['password'] = None
 
         serializer = EventEditSerializer(event, data=data, partial=True)
-        
         if serializer.is_valid():
-            # Sprawdzamy, czy item_properties i default_values zostały poprawnie przekazane
-            #print("Validated item_properties:", serializer.validated_data.get('item_properties'))
-            #print("Validated default_values:", serializer.validated_data.get('default_values'))
-            
-            # Zapisz zmodyfikowany event
             serializer.save()
             return Response(serializer.data)
-        print("Validation errors:", serializer.errors)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 
 class MobileItemsListView(APIView):

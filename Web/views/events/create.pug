@@ -14,26 +14,17 @@ block content
         // Pole dla nazwy wydarzenia (wymagane)
         .field-row
           label(for="title") Nazwa Wydarzenia:
-          input(type="text" name="title" placeholder="Wpisz nazwę wydarzenia" required)
+          input(type="text", name="title", placeholder="Wpisz nazwę wydarzenia" required)
 
         // Pole dla daty rozpoczęcia (wymagane)
         .field-row
           label(for="start_time") Data rozpoczęcia:
-          input(type="datetime-local" id="start_time" name="start_time" required)
+          input(type="datetime-local", id="start_time", name="start_time" required)
 
         // Pole dla daty zakończenia (wymagane)
         .field-row
           label(for="end_time") Data zakończenia:
-          input(type="datetime-local" id="end_time" name="end_time" required)
-
-        //- // Pole dla statusu wydarzenia (wymagane)
-        //- .field-row
-        //-   label(for="status") Status:
-        //-   select(name="status" required)
-        //-     option(value="Waiting") Oczekujący
-        //-     option(value="Active") Aktywny
-        //-     option(value="End") Zakończony
-        //-     option(value="ActiveWithRanking") Aktywny z rankingiem
+          input(type="datetime-local", id="end_time", name="end_time" required)
 
         // Kategorie
         .field-row
@@ -41,7 +32,7 @@ block content
           .checkbox-group
             each category in categories
               div
-                input(type="checkbox" name="categories" value=category)
+                input(type="checkbox", name="categories", value=category)
                 label(for=category)= category
 
         // Pole dla prywatności wydarzenia
@@ -54,7 +45,7 @@ block content
         // Pole dla hasła (domyślnie wyłączone)
         .field-row
           label(for="password") Hasło:
-          input(type="password" name="password" id="showPassword" placeholder="Wpisz hasło" disabled)
+          input(type="password", name="password", id="showPassword", placeholder="Wpisz hasło" disabled)
 
         // Dynamiczne pola dla właściwości przedmiotów
         .field-row
@@ -65,12 +56,12 @@ block content
             input(type="text" name="default_values" placeholder="Domyślna wartość" required)
             button(type="button" class="remove-field") - Usuń
 
-        button(type="button" id="add-field") + Dodaj Nową Właściwość
+        button(type="button", id="add-field") + Dodaj Nową Właściwość
 
         // Pole dla obrazka wydarzenia (wymagane)
         .field-row
           label(for="image") Obrazek wydarzenia:
-          input(type="file" name="image" accept="image/*" required)
+          input(type="file", name="image" accept="image/*" required)
 
         // Przycisk tworzenia wydarzenia
         button(type="submit") Dodaj Wydarzenie
@@ -82,9 +73,17 @@ block content
 
           // Sprawdzanie zgodności dat
           function validateDates() {
+            const now = new Date();
             const startTime = new Date(startTimeField.value);
             const endTime = new Date(endTimeField.value);
 
+            // Walidacja daty rozpoczęcia
+            if (startTime < now) {
+              alert('Data rozpoczęcia nie może być wcześniejsza niż aktualna data!');
+              startTimeField.value = '';
+            }
+
+            // Walidacja daty zakończenia
             if (endTime < startTime) {
               alert('Data zakończenia nie może być wcześniejsza niż data rozpoczęcia!');
               endTimeField.value = '';

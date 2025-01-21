@@ -16,16 +16,16 @@ block content
             div.no-image No image available
           ul.details-list
             li
-              strong Tytuł:
+              strong Tytuł: 
               | #{event.title}
             li
-              strong Data startu:
+              strong Data startu: 
               | #{event.start_time}
             li
-              strong Data zakończenia:
+              strong Data zakończenia: 
               | #{event.end_time}
             li
-              strong Status:
+              strong Status: 
               if event.status === 'Active'
                 | Aktywny
               else if event.status === 'End'
@@ -35,10 +35,10 @@ block content
               else
                 | #{event.status}
             li
-              strong Prywatny:
+              strong Prywatny: 
               | #{event.is_private ? 'Tak' : 'Nie'}
             li
-              strong Kategorie:
+              strong Kategorie: 
               | #{event.categories.join(', ')}
 
         .event-body
