@@ -1,8 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
     const deleteCommentLinks = document.querySelectorAll(".btn-delete-comment");
     const deleteRatingLinks = document.querySelectorAll(".btn-delete-rating");
-  
-    // Obsługa usuwania komentarzy
+
     deleteCommentLinks.forEach(link => {
       link.addEventListener("click", async (event) => {
         event.preventDefault();
@@ -24,7 +23,6 @@ document.addEventListener("DOMContentLoaded", () => {
   
           if (response.ok) {
             alert("Komentarz został pomyślnie usunięty.");
-            // Usuń komentarz z widoku
             link.closest(".review-card").querySelector("p:nth-of-type(2)").innerText = "Komentarz: brak";
           } else {
             const errorData = await response.json();
@@ -37,7 +35,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
   
-    // Obsługa usuwania ocen
     deleteRatingLinks.forEach(link => {
       link.addEventListener("click", async (event) => {
         event.preventDefault();
@@ -59,7 +56,6 @@ document.addEventListener("DOMContentLoaded", () => {
   
           if (response.ok) {
             alert("Ocena została pomyślnie usunięta.");
-            // Usuń kartę recenzji z widoku
             link.closest(".review-card").remove();
           } else {
             const errorData = await response.json();

@@ -1,8 +1,6 @@
 extends ../layout
 
 block content
-  .page-header
-    h1 Edycja eventu
 
   doctype html
   html(lang="pl")
@@ -10,14 +8,16 @@ block content
       meta(charset="UTF-8")
       meta(name="viewport" content="width=device-width, initial-scale=1.0")
       title Edycja eventu
-      link(rel="stylesheet", href="/stylesheets/panel/edit-event/style.css")
+      link(rel="stylesheet", href="/stylesheets/panel/create-event.css")
       script(src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js")
 
     body
+      .form-header
+        h2 Edycja Wydarzenia
       if error
         p.error #{error}
 
-      form(action=`/panel/events/${event.id}/edit` method="POST" enctype="multipart/form-data")
+      form(action=`/panel/events/${event.id}/edit` method="POST" enctype="multipart/form-data" id="edit-event-form")
         input(type="hidden" name="_method" value="PUT")
 
         .field-row
@@ -25,96 +25,155 @@ block content
           input(type="text", name="title", placeholder="Tytuł", value=event.title, required)
 
         .field-row
-          label(for="start_time") Data startu:
-          input(type="datetime-local", name="start_time", placeholder="Data startu", value=event.start_time, required)
+          label(for="start_time") Data rozpoczęcia:
+          input(type="datetime-local", id="start_time", name="start_time", placeholder="Data rozpoczęcia", value=event.start_time, required)
 
         .field-row
           label(for="end_time") Data zakończenia:
-          input(type="datetime-local", name="end_time", placeholder="Data zakończenia", value=event.end_time, required)
+          input(type="datetime-local", id="end_time", name="end_time", placeholder="Data zakończenia", value=event.end_time, required)
 
         .field-row
-          label(for="is_private") Prywatny:
-          input(type="checkbox", name="is_private", checked=event.is_private)
-          //- input(type="hidden", name="is_private", value="false")  <!-- Ukryte pole do ustawienia wartości false jeśli checkbox jest odznaczony -->
+          label
+            | Prywatne Wydarzenie 
+            input(type="checkbox", name="is_private", id="is-private-checkbox", checked=event.is_private)
 
         .field-row
           label(for="password") Hasło:
-          input(type="password", name="password", placeholder="Hasło (opcjonalne)", value=event.password, id="password-input")
+          input(type="password", name="password", id="password-input", value=event.password, placeholder="Hasło (opcjonalne)", disabled=!event.is_private)
+
+        .field-row
+          label
+            | Pokaż hasło 
+            input(type="checkbox", id="show-password", disabled=!event.is_private)
+
+        .field-row
+          label(for="categories") Kategorie:
+          .checkbox-group
+            each category in categories
+              div
+                input(type="checkbox", name="categories", value=category, checked=event.categories.includes(category))
+                label(for=category)= category
 
         .field-row
           label(for="image") Zdjęcie:
           input(type="file", name="image", accept="image/*")
           if event.image
-            img(src=`data:image/jpeg;base64,${event.image.toString('base64')}`, alt="Current Image", width="100")
+            img(src=`data:image/jpeg;base64,${event.image}`, alt="Current Image", width="100")
           else
             p Brak zdjęcia
 
-        h2 Item Properties i Default Values
+        h2 Właściwości przedmiotów i wartości domyślne
+        if event.has_items
+          p.info
+            | Aby edytować właściwości przedmiotów, wydarzenie nie może posiadać żadnych przedmiotów.
         #fields-container
           each property, index in event.item_properties
             .field-row
-              input(type="text", name="item_properties[]" placeholder="Nazwa" value=property required)
-              input(type="text", name="default_values[]" placeholder="Default" value=event.default_values[index] required)
-              button(type="button", class="remove-field") -
+              input(type="text", name="item_properties[]" placeholder="Nazwa" value=property required disabled=event.has_items)
+              input(type="text", name="default_values[]" placeholder="Domyślna wartość" value=event.default_values[index] required disabled=event.has_items)
+              if !event.has_items
+                button(type="button", class="remove-field") - Usuń
+
+        if !event.has_items
+          .field-row
+            button(type="button", id="add-field") + Dodaj nowe pole
 
         .field-row
-          button(type="button", id="add-field") + Dodaj pole
           button(type="submit") Zapisz zmiany
 
   script.
     $(document).ready(function() {
-      function formatDate(date) {
-        let d = new Date(date);
-        return d.toISOString().slice(0, 16);
-      }
-
-      $('input[type="datetime-local"]').each(function() {
-        let value = $(this).val();
-        if (value && value.length === 16) {
-          $(this).val(formatDate(value));
-        }
-      });
-
       const container = $('#fields-container');
       const addButton = $('#add-field');
-      const passwordField = $('#password-input'); // Pole hasła
-      const privateCheckbox = $('input[name="is_private"]'); // Checkbox "is_private"
+      const passwordField = $('#password-input');
+      const privateCheckbox = $('#is-private-checkbox');
+      const showPasswordCheckbox = $('#show-password');
+      const form = $('#edit-event-form');
+      const categoriesGroup = $('.checkbox-group input[type="checkbox"]');
+      const startTimeField = $('#start_time');
+      const endTimeField = $('#end_time');
 
-      // Funkcja do kontrolowania dostępności pola hasła
+      // Zarządzanie widocznością pola hasła i checkboxa "Pokaż hasło"
       function togglePasswordField() {
         if (privateCheckbox.is(':checked')) {
-          passwordField.prop('disabled', false); // Włącz pole hasła
+          passwordField.prop('disabled', false);
+          showPasswordCheckbox.prop('disabled', false);
         } else {
-          passwordField.prop('disabled', true); // Wyłącz pole hasła
-          passwordField.val(''); // Wyczyść pole hasła, jeśli jest publiczny
+          passwordField.prop('disabled', true);
+          showPasswordCheckbox.prop('disabled', true).prop('checked', false);
+          passwordField.attr('type', 'password');
         }
       }
 
-      // Ustaw początkowy stan na podstawie tego, czy "is_private" jest zaznaczone
       togglePasswordField();
 
-      // Zmieniamy stan pola hasła po zmianie checkboxa "is_private"
       privateCheckbox.on('change', function() {
         togglePasswordField();
       });
 
-      addButton.on('click', function() {
-        const newRow = $(`
-          <div class="field-row">
-            <input type="text" name="item_properties[]" placeholder="Nazwa" required>
-            <input type="text" name="default_values[]" placeholder="Default" required>
-            <button type="button" class="remove-field">-</button>
-          </div>
-        `);
-
-        newRow.find('.remove-field').on('click', function() {
-          $(this).parent().remove();
-        });
-
-        container.append(newRow);
+      showPasswordCheckbox.on('change', function() {
+        passwordField.attr('type', this.checked ? 'text' : 'password');
       });
 
-      $(document).on('click', '.remove-field', function() {
-        $(this).parent().remove();
+      // Sprawdzanie zgodności dat
+      function validateDates() {
+        const now = new Date();
+        const startTime = new Date(startTimeField.val());
+        const endTime = new Date(endTimeField.val());
+
+        // Walidacja daty rozpoczęcia
+        if (startTime < now) {
+          alert('Data rozpoczęcia nie może być wcześniejsza niż aktualna data!');
+          startTimeField.val('');
+        }
+
+        // Walidacja daty zakończenia
+        if (endTime < startTime) {
+          alert('Data zakończenia nie może być wcześniejsza niż data rozpoczęcia!');
+          endTimeField.val('');
+        }
+      }
+
+      startTimeField.on('change', validateDates);
+      endTimeField.on('change', validateDates);
+
+      // Dodawanie nowego pola dla właściwości przedmiotów, jeśli event nie ma przedmiotów
+      if (!$('#fields-container').data('has-items')) {
+        addButton.on('click', function() {
+          const newRow = $(`<div class="field-row">
+              <input type="text" name="item_properties[]" placeholder="Nazwa" required>
+              <input type="text" name="default_values[]" placeholder="Domyślna wartość" required>
+              <button type="button" class="remove-field">- Usuń</button>
+            </div>`);
+
+          newRow.find('.remove-field').on('click', function() {
+            $(this).parent().remove();
+          });
+
+          container.appendChild(newRow);
+        });
+
+        $(document).on('click', '.remove-field', function() {
+          $(this).parent().remove();
+        });
+      }
+
+      form.on('submit', function(e) {
+        let isValid = true;
+        let errorMessage = '';
+
+        if (categoriesGroup.filter(':checked').length === 0) {
+          errorMessage += 'Musisz wybrać przynajmniej jedną kategorię.\n';
+          isValid = false;
+        }
+
+        if (!privateCheckbox.is(':checked')) {
+          passwordField.val('');
+        }
+
+        if (!isValid) {
+          e.preventDefault();
+          alert(errorMessage.trim());
+        }
       });
     });

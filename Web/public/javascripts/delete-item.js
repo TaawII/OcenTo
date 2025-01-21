@@ -1,15 +1,13 @@
 document.addEventListener("DOMContentLoaded", () => {
-    // Pobieramy wszystkie linki "Usuń"
     const deleteLinks = document.querySelectorAll(".btn-delete");
   
     deleteLinks.forEach(link => {
       link.addEventListener("click", async (event) => {
-        event.preventDefault(); // Zapobiega domyślnemu działaniu linku
+        event.preventDefault();
   
         const eventId = link.getAttribute("data-event-id");
         const itemId = link.getAttribute("data-item-id");
   
-        // Potwierdzenie usunięcia
         const confirmDelete = confirm("Czy na pewno chcesz usunąć ten przedmiot? Usunięte zostaną również wszystkie oceny oraz komentarze użytkowników.");
         if (!confirmDelete) return;
   
@@ -23,7 +21,6 @@ document.addEventListener("DOMContentLoaded", () => {
   
           if (response.ok) {
             alert("Przedmiot został pomyślnie usunięty.");
-            // Usuń kartę itemu z widoku
             link.closest(".item-card").remove();
           } else {
             const errorData = await response.json();
