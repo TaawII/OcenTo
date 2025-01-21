@@ -13,12 +13,10 @@ exports.getEvent = async (req, res) => {
       headers: { Authorization: `Bearer ${authToken}` },
     });
 
-
-    // Funkcja do formatowania daty
     const formatDate = (dateString) => {
       const date = new Date(dateString);
       if (isNaN(date)) {
-        return "Invalid Date"; // W przypadku niepoprawnej daty
+        return "Invalid Date";
       }
       const options = {
         year: 'numeric',
@@ -28,17 +26,14 @@ exports.getEvent = async (req, res) => {
         minute: '2-digit',
         hour12: false
       };
-      return date.toLocaleString('pl-PL', options);  // Formatowanie na polski format
+      return date.toLocaleString('pl-PL', options);
     };
 
-
-    // Jeśli zdjęcie istnieje, konwertujemy je na Base64
     if (response.data.image) {
       const base64Image = response.data.image.toString('base64');
       response.data.image = base64Image;
     }
 
-    // Formatowanie daty
     response.data.start_time = formatDate(response.data.start_time);
     response.data.end_time = formatDate(response.data.end_time);
 
@@ -72,13 +67,11 @@ exports.renderEditForm = async (req, res) => {
 
     const event = response.data;
 
-    // Funkcja do formatowania daty w odpowiedni sposób
     const formatDate = (date) => {
       const d = new Date(date);
-      return d.toISOString().slice(0, 16); // Format "YYYY-MM-DDTHH:MM"
+      return d.toISOString().slice(0, 16);
     };
 
-    // Formatowanie dat w obiekcie event
     event.start_time = formatDate(event.start_time);
     event.end_time = formatDate(event.end_time);
 
@@ -101,14 +94,12 @@ exports.editEvent = async (req, res) => {
 
   let { item_properties, default_values, categories, password } = req.body;
 
-  // Konwersja do tablic
   if (typeof item_properties === 'string') item_properties = [item_properties];
   if (typeof default_values === 'string') default_values = [default_values];
   if (typeof categories === 'string') categories = [categories];
 
   const isPrivate = req.body.is_private === 'on';
 
-  // Obsługa obrazu
   const imageFile = req.file ? req.file.buffer.toString('base64') : null;
 
   const eventData = {
@@ -181,7 +172,6 @@ exports.submitEvent = async (req, res) => {
     };
 
     const token = req.cookies.auth_token;
-    console.log(token);
     const response = await axios.post(`http://${serverURL}/create`, formData, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -199,11 +189,10 @@ exports.getUserEvents = async (req, res) => {
   const serverURL = process.env.serwerURL;
   const authToken = req.cookies.auth_token;
 
-  // Funkcja do formatowania daty
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     if (isNaN(date)) {
-      return "Invalid Date"; // W przypadku niepoprawnej daty
+      return "Invalid Date";
     }
     const options = {
       year: 'numeric',
@@ -213,7 +202,7 @@ exports.getUserEvents = async (req, res) => {
       minute: '2-digit',
       hour12: false
     };
-    return date.toLocaleString('pl-PL', options);  // Formatowanie na polski format
+    return date.toLocaleString('pl-PL', options);
   };
 
   try {
@@ -221,13 +210,11 @@ exports.getUserEvents = async (req, res) => {
       headers: { Authorization: `Bearer ${authToken}` },
     });
 
-    // Formatowanie dat dla każdego eventu
     response.data.forEach(event => {
       event.start_time = formatDate(event.start_time);
       event.end_time = formatDate(event.end_time);
     });
 
-    // Przekazanie danych wydarzeń do widoku
     res.render('panel/user-events', { events: response.data });
   } catch (error) {
     console.error(error);

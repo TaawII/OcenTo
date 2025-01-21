@@ -68,7 +68,6 @@ class ItemSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'event', 'item_values', 'image']
 
     def get_item_values(self, obj):
-        # Jeśli item_values jest pusty, zwracamy default_values z eventu
         if not obj.item_values or obj.item_values == "":
             return obj.event.default_values
         return obj.item_valuesm
@@ -108,14 +107,12 @@ class EventEditSerializer(serializers.ModelSerializer):
         fields = ['title', 'item_properties', 'default_values', 'status', 'start_time', 'end_time', 'is_private', 'password', 'categories', 'image']
         
     def validate_item_properties(self, value):
-        # Sprawdzenie, czy dane są listą
         if isinstance(value, list):
             return value
         else:
             raise serializers.ValidationError("Item properties must be a list.")
 
     def validate_default_values(self, value):
-        # Sprawdzenie, czy dane są listą
         if isinstance(value, list):
             return value
         else:
@@ -196,9 +193,7 @@ class ItemSerializer(serializers.ModelSerializer):
         model = Item
         fields = ['id', 'name', 'item_values', 'event', 'image']
 
-    # Walidacja danych 'item_values'
     def validate_item_values(self, value):
-        # Zapewnia, że 'item_values' jest listą odpowiadającą 'item_properties'
         if not isinstance(value, list):
             raise serializers.ValidationError('Item values must be a list.')
 
